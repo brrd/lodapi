@@ -19,6 +19,7 @@
     "cheerio": "^0.20.0",
     "commander": "^2.9.0",
     "is-url": "^1.2.1",
+    "multispinner": "^0.2.1",
     "pretty-ms": "^2.1.0",
     "prompt": "^1.0.0",
     "request": "^2.69.0",

@@ -1,5 +1,6 @@
 fs = require("fs")
 path = require("path")
+Multispinner = require("multispinner")
 request = require("request")
 uploadDoc = require("./upload-doc.js")
 urljoin = require("url-join")
@@ -29,10 +30,12 @@ uploadFiles = (data) ->
             idParent: data.idParent
             idType: data.idType
             docPath: path.join(data.dirPath, filename)
+            multispinner: data.multispinner
         # data.pdf option
         if data.pdf is true then config.pdfPath = getPdfPath(data.dirPath, filename)
         return uploadDoc(config)
 
+    data.multispinner = new Multispinner(data.docs)
     promises = data.docs.map(mapFunc)
     return Promise.all(promises)
 
@@ -51,8 +54,7 @@ sortDocs = (datas) ->
             if (aBasename < bBasename) then return -1
             return 0
         # create a list of ids
-        idList = []
-        idList.push(data.docId) for data in datas
+        idList = (data.docId for data in datas)
         # get request target
         root = datas[0].baseUrl
         # devel, edt... ou prod

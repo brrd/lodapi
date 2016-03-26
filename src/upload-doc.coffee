@@ -122,7 +122,12 @@ addPdf = (data) ->
 
 # TODO: Ceci devrait être l'objet d'une option qui correspond au niveau de log (none|normal|debug) + il faudrait préfixer chaque log avec le nom de l'opération et du fichier
 logStatus = (data) ->
-    console.log("Le fichier #{data.docPath} a été chargé avec l'identifiant #{data.docId} et le message : '#{data.status}'")
+    # Stop spinner
+    filename = path.basename(data.docPath)
+    if data?.multispinner?.spinners?[filename] then data.multispinner.success(filename)
+    # Log
+    # FIXME: incompatible avec le spinner. Il faudrait plutot mettre ça dans un log affiché à la fin.
+    # console.log("Le fichier #{data.docPath} a été chargé avec l'identifiant #{data.docId} et le message : '#{data.status}'")
     return Promise.resolve(data)
 
 module.exports = (data) ->
@@ -132,3 +137,7 @@ module.exports = (data) ->
         .then(validateTask)
         .then(addPdf)
         .then(logStatus)
+        .catch (err)->
+            console.error err
+            filename = path.basename(data.docPath)
+            if data?.multispinner?.spinners?[filename] then data.multispinner.error(filename)
