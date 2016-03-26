@@ -16,6 +16,7 @@
   "author": "Thomas Brouard",
   "license": "",
   "dependencies": {
+    "chalk": "^1.1.1",
     "cheerio": "^0.20.0",
     "commander": "^2.9.0",
     "is-url": "^1.2.1",
@@ -23,6 +24,7 @@
     "pretty-ms": "^2.1.0",
     "prompt": "^1.0.0",
     "request": "^2.69.0",
+    "tty-table": "^1.0.7",
     "url-join": "0.0.1"
   },
   "devDependencies": {

@@ -104,7 +104,9 @@ validateTask = (data) ->
 # TODO: message à logger
 addPdf = (data) ->
     return new Promise (resolve, reject) ->
-        if not data.pdfPath? then resolve(data)
+        if not data.pdfPath?
+            data.pdfState = "off"
+            resolve(data)
         # Get PDF absolute path
         if path.isAbsolute(data.pdfPath)
             pdfAbsPath = data.pdfPath
@@ -115,10 +117,11 @@ addPdf = (data) ->
         fs.stat pdfAbsPath, (err, stat) ->
             if err?
                 pdfBasename = path.basename(pdfAbsPath)
-                console.log("#{pdfBasename}: PDF introuvable")
+                data.pdfState = "none"
                 resolve(data) # On ne lance pas pour autant d'erreur ici
-            data.id = data.docId # TODO: IL FAUT NORMALISER ÇA ENTRE LES METHODES POUR AVOIR UNE API CONSITENTE ET ÉVITER CE GENRE DE MANIP DEGUEU ET DANGEREUSE !
-            uploadPdf(data).then(resolve, reject)
+            else
+                data.id = data.docId # TODO: IL FAUT NORMALISER ÇA ENTRE LES METHODES POUR AVOIR UNE API CONSITENTE ET ÉVITER CE GENRE DE MANIP DEGUEU ET DANGEREUSE !
+                uploadPdf(data).then(resolve, reject)
 
 # TODO: Ceci devrait être l'objet d'une option qui correspond au niveau de log (none|normal|debug) + il faudrait préfixer chaque log avec le nom de l'opération et du fichier
 logStatus = (data) ->

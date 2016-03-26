@@ -1,7 +1,10 @@
+chalk = require("chalk")
 fs = require("fs")
 path = require("path")
 Multispinner = require("multispinner")
+path = require("path")
 request = require("request")
+Table = require("tty-table")
 uploadDoc = require("./upload-doc.js")
 urljoin = require("url-join")
 
@@ -35,7 +38,7 @@ uploadFiles = (data) ->
         if data.pdf is true then config.pdfPath = getPdfPath(data.dirPath, filename)
         return uploadDoc(config)
 
-    data.multispinner = new Multispinner(data.docs)
+    data.multispinner = new Multispinner(data.docs, { clear: true, color: { incomplete: "white" } })
     promises = data.docs.map(mapFunc)
     return Promise.all(promises)
 
@@ -87,9 +90,63 @@ sortDocs = (datas) ->
 
         request.post(postConfig, done)
 
+# FIXME: Ici on mélange un peu la ligne de commande avec l'API
+outputLog = (datas) ->
+    return new Promise (resolve, reject) ->
+        # Table header
+        header = [
+            {
+                value : "Document"
+                align : "left"
+                width: 30
+            },
+            {
+                value : "ID"
+                width: 10
+            },
+            {
+                value : "Stylage"
+                width: 12
+                formatter : (value) ->
+                    if value.match(/^IMPORT RÉUSSI/i)? then return chalk.green("OK")
+                    else return chalk.red("Erreur")
+            },
+            {
+                value : "PDF"
+                width: 10
+                formatter : (value) ->
+                    if value is "off" then return chalk.grey("-")
+                    else if value is "none" then return chalk.yellow("Aucun")
+                    else if value is "loaded" then return chalk.green("Chargé")
+                    else return chalk.red("Erreur")
+            },
+        ]
+
+        # Table rows
+        getRow = (data) ->
+            "Document": path.basename(data.docPath) # TODO: il faudrait faire ça une fois pour toutes
+            "ID": data.docId
+            "Stylage": data.status
+            "PDF": data.pdfState
+        rows = (getRow(data) for data in datas)
+
+        # Create table
+        tableConfig =
+            borderStyle : 1
+            paddingBottom : 0
+            headerAlign : "center"
+            align : "center"
+            color : "white"
+        tbl = Table(header, rows, tableConfig)
+
+        # Log
+        console.log(chalk.bgGreen("Terminé !"))
+        console.log("#{datas.length} documents importés vers #{data.baseUrl}/#{data.idParent}")
+        console.log(tbl.render())
 
 module.exports = (data) ->
     if not (data? and data.headers? and data.baseUrl? and data.dirPath? and data.idParent? and data.idType?) then throw new Error("Missing arguments in upload-all")
     return getDocsList(data)
         .then(uploadFiles)
         .then(sortDocs)
+        .then(outputLog)

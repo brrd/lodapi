@@ -4,7 +4,7 @@ request = require("request")
 urljoin = require("url-join")
 
 # Merci Lodel pour ces formidables formulaires qu'on doit intégralement recompléter pour charger un simple pdf !
-# data = { headers, baseUrl, id }
+# data = { headers, baseUrl, id, pdfPath }
 getFormValues = (data) ->
     return new Promise (resolve, reject) ->
         getConfig =
@@ -71,7 +71,7 @@ uploadFileForm = (data) ->
             if err then reject(err)
             else if response.statusCode isnt 200
                 reject new Error("Erreur lors du chargement du pdf '#{data.pdfPath}'")
-            console.log("PDF chargé: #{data.pdfPath}")
+            data.pdfState = "loaded"
             resolve(data)
 
         request.post(postConfig, done)
