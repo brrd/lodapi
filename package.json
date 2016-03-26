@@ -1,0 +1,30 @@
+{
+  "name": "lodapi",
+  "version": "0.0.1",
+  "description": "Lodapi est une API en ligne de commandes pour votre logiciel d'édition électronique préféré",
+  "main": "lib/main.js",
+  "bin": {
+    "lodapi": "bin/lodapi"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "coffee --compile --output lib/ src/",
+    "postinstall": "coffee --compile --output lib/ src/",
+    "watch": "coffee --watch --output lib/ src/",
+    "start": "bin/lodapi"
+  },
+  "author": "Thomas Brouard",
+  "license": "",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "commander": "^2.9.0",
+    "is-url": "^1.2.1",
+    "pretty-ms": "^2.1.0",
+    "prompt": "^1.0.0",
+    "request": "^2.69.0",
+    "url-join": "0.0.1"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0"
+  }
+}

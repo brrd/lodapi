@@ -1,0 +1,41 @@
+LODUP CLI (brouillon)
+
+Remarque: Ceci n'est pas de la documentation mais une liste d'idées. Utiliser --help pour l'API réelle.
+
+login et password sont demandés en prompt
+
+Paramètres communs :
+    -s  --site [url] : url du site cible (obligatoire)
+    -D  --debug [bool]
+    -V
+    -h
+
+$ lodup upload : charger un document
+    -p  --parent [id] : id du parent (obligatoire)
+    -d  --doc [document path] : chemin local vers le document à charger (obligatoire)
+    -t  --type [type] : type d'objet (article par defaut)
+
+$ lodup reload : recharger un document
+    -i  --id [id] : id du document à recharger
+    -d  --doc [document path] : chemin local vers le document à charger (obligatoire)
+
+$ lodup issue : charger les documents d'un répertoire (récursif). Chaque doc doit avoir pour parent un dir dont le nom est excatement l'id du parent de ce doc dans Lodel. Si uploaded.json existe au même niveau qu'un doc et si ce fichier référence l'id du doc, alors le document ne sera pas ajouté mais rechargé à la place de la version précédente.
+    -d  --dir [dir path] : chemin du répertoire local (obligatoire)
+
+$ lodup create : creer un nouvel enregistrement (via formulaire)
+    -p  --parent [id] : id du parent (obligatoire)
+    -n  --name [name] : le nom de l'enregistrement (obligatoire)
+    -t  --type [type] : type d'objet (sous partie par defaut)
+    -v  --values [path to JSON] : le chemin vers un JSON qui contient les valeur à envoyer au formulaire en post
+    -d  --dir [dir path] :  optionnel, le chemin d'un dossier dans lequel creer un sous repertoire du nom = id de l'objet cree (peut permettre de créer une structure de numero puis utiliser )
+
+$ lodup edit : editer un enregistrement (via formulaire)
+    -i  --id [id] : id de l'enregistrement (obligatoire)
+    -n  --name [name] : nouveau nom
+    -t  --type [type] : nouveau type
+    -v  --values [path to JSON] : le chemin vers un JSON qui contient les valeurs à envoyer au formulaire en post
+
+$ lodup types : enumere les types disponibles
+
+ajouter : delete, empty
+
