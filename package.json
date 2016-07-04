@@ -14,7 +14,7 @@
     "start": "bin/lodapi"
   },
   "author": "Thomas Brouard",
-  "license": "",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^1.1.1",
     "cheerio": "^0.20.0",

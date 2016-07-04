@@ -13,3 +13,7 @@ Avec node :`$ npm install -g lodapi`
 Pour connaître les options disponibles : `$ lodapi --help`
 
 Remarque : ce programme est en phase beta. La stabilité de son API dans les versions futures n'est pas garantie.
+
+## License
+
+The MIT License (MIT) Copyright (c) 2016 Thomas Brouard
