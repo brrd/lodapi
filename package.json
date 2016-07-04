@@ -1,7 +1,7 @@
 {
   "name": "lodapi",
   "version": "0.0.1",
-  "description": "Lodapi est une API en ligne de commandes pour votre logiciel d'édition électronique préféré",
+  "description": "Lodel en ligne de commande",
   "main": "lib/main.js",
   "bin": {
     "lodapi": "bin/lodapi"
