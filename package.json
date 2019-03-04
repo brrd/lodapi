@@ -1,6 +1,6 @@
 {
   "name": "lodapi",
-  "version": "0.0.2",
+  "version": "1.0.0-dev",
   "description": "Lodel en ligne de commande",
   "main": "lib/main.js",
   "bin": {
@@ -8,9 +8,6 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "coffee --compile --output lib/ src/",
-    "postinstall": "coffee --compile --output lib/ src/",
-    "watch": "coffee --watch --output lib/ src/",
     "start": "bin/lodapi"
   },
   "author": "Thomas Brouard",
@@ -28,6 +25,5 @@
     "url-join": "0.0.1"
   },
   "devDependencies": {
-    "coffee-script": "^1.10.0"
   }
 }
