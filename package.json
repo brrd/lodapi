@@ -1,29 +1,23 @@
 {
-  "name": "lodapi",
+  "name": "loadapi",
   "version": "1.0.0-dev",
-  "description": "Lodel en ligne de commande",
-  "main": "lib/main.js",
-  "bin": {
-    "lodapi": "bin/lodapi"
-  },
+  "description": "API for Lodel",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "bin/lodapi"
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Thomas Brouard",
   "license": "MIT",
-  "dependencies": {
-    "chalk": "^1.1.1",
-    "cheerio": "^0.20.0",
-    "commander": "^2.9.0",
-    "is-url": "^1.2.1",
-    "multispinner": "^0.2.1",
-    "pretty-ms": "^2.1.0",
-    "prompt": "^1.0.0",
-    "request": "^2.69.0",
-    "tty-table": "^1.0.7",
-    "url-join": "0.0.1"
-  },
   "devDependencies": {
+    "@types/node": "^11.11.6",
+    "@types/request": "^2.48.1",
+    "@types/url-join": "^4.0.0",
+    "typescript": "^3.3.3333"
+  },
+  "dependencies": {
+    "request": "^2.88.0",
+    "url-join": "^4.0.0"
   }
 }
