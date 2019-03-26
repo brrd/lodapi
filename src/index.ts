@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { createReadStream, stat } from "fs";
 import { IncomingMessage, IncomingHttpHeaders } from "http";
 import * as request from "request";
 import { parse } from "url";
@@ -22,6 +23,18 @@ interface PublicationOptions {
 interface EntityType {
 	name: string,
 	id: number
+}
+
+interface Doc {
+	path: string,
+	idParent: number,
+	idType: number
+}
+
+interface OtxTask {
+	taskId: number,
+	status?: string | undefined,
+	docId?: number
 }
 
 const htpasswd = {
@@ -147,6 +160,123 @@ class LodelSession {
 			};
 			return request.get(getConfig, done);
 		})
+	}
+
+	uploadDoc({ path, idParent, idType }: Doc) {
+		// 1. Submit upload form and get OTX task id
+		const submitUpload = () => {
+			const postUrl = `/lodel/edition/oochargement.php?idparent=${String(idParent)}&idtype=${String(idType)}`;
+			const postConfig = {
+				url: urljoin(this.baseUrl, postUrl),
+				followAllRedirects: true,
+				headers: this.headers,
+				formData: {
+					idparent: idParent,
+					idtype: idType,
+					fileorigin: "upload",
+					mode: "strict",
+					file1: createReadStream(path)
+				}
+			};
+
+			return new Promise<OtxTask>(function (resolve, reject) {
+				const done = (err: Error, response: request.Response, body: any) => {
+					if (!err && response.statusCode !== 200) {
+						err = new Error(`Error while uploading doc: unexpected status code ${response.statusCode}`);
+					}
+					if (err) return reject(err);
+
+					// Get OTX task id after upload
+					const getTaskId = (body: any) => {
+						if (typeof body !== "string") return null;
+						const re = /window\.parent\.o\.changeStep\((\d+),\s+"(\d+)"\);/;
+						const match = body.match(re);
+						// OTX error
+						if ((match == null) || (match[1] !== "3") || (match[2] == null)) {
+							return null;
+						}
+						return Number(match[2]);
+					};
+
+					const taskId = getTaskId(body);
+					if (taskId == null) {
+						return reject(new Error("Could not get taskId."));
+					}
+					resolve({ taskId });
+				};
+				return request.post(postConfig, done);
+			});
+		}
+
+		// 2. Get OTX task status
+		const getStatus = ({ taskId }: OtxTask) => {
+			const postUrl = `/lodel/edition/checkimport.php?idtask=${String(taskId)}&reload=0`;
+			const getConfig = {
+				url: urljoin(this.baseUrl, postUrl),
+				followAllRedirects: false,
+				headers: this.headers
+			};
+
+			return new Promise<OtxTask>(function (resolve, reject) {
+				const done = (err: Error, response: request.Response, body: any) => {
+					if (!err && response.statusCode !== 200) {
+						err = new Error(`Could not get OTX log for task ${String(taskId)}: unexpected status code ${response.statusCode}`);
+					}
+					if (err) return reject(err);
+
+					const status = ((body) => {
+						const $ = cheerio.load(body);
+						const status = $("#status").text();
+						if (!status) return null;
+						return status.replace(/(\n|\s)+/g, " ");
+					})(body);
+
+					if (status == null) {
+						return reject(new Error(`Could not get OTX log for task ${String(taskId)}: status is null`));
+					}
+					return resolve({ taskId, status });
+				};
+				return request.get(getConfig, done);
+			});
+		}
+
+		// 3. Validate OTX task
+		const validateTask = ({ taskId, status }: OtxTask) => {
+			const postUrl = `/lodel/edition/index.php?do=import&idtask=${String(taskId)}&finish=oui&visualiserdocument=oui&reload=`;
+			const postConfig = {
+				url: urljoin(this.baseUrl, postUrl),
+				followAllRedirects: true,
+				headers: this.headers
+			};
+			
+			return new Promise<OtxTask>(function (resolve, reject) {
+				const done = (err: Error, response: request.Response, body: any) => {
+					if (!err && response.statusCode !== 200) {
+						err = new Error(`Could not validate task ${String(taskId)}: unexpected status code ${response.statusCode}`);
+					}
+					if (err) return reject(err);
+
+					const getDocId = (href: string) => {
+						const match = href.match(/\d+$/);
+						if (match == null) return null;
+						return Number(match[0]);
+					};
+
+					const href = response.request.uri.href;
+					const docId = getDocId(href);
+					if (docId == null) {
+						return reject(new Error(`Error while uploading '${path}': could not get id after upload`));
+					}
+					return resolve({ taskId, status, docId });
+				};
+				return request.post(postConfig, done);
+			})
+		}
+
+		// Main
+		return submitUpload()
+			.then(getStatus)
+			.then(validateTask);
 	}
 }
 
