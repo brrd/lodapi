@@ -43,6 +43,8 @@ const htpasswd = {
 	sendImmediately: false
 };
 
+const undefinedHeadersReject = () => Promise.reject("Session headers is undefined. Please make sure auth() was called first.");
+
 class LodelSession {
 	baseUrl: string;
 	headers: IncomingHttpHeaders | undefined;
@@ -79,6 +81,8 @@ class LodelSession {
 	}
 
 	createPublication({ idParent, idType, title = "New publication" }: PublicationOptions) {
+		if (this.headers == null) return undefinedHeadersReject();
+		
 		const postUrl = "/lodel/edition/index.php";
 		const postConfig = {
 			url: urljoin(this.baseUrl, postUrl),
@@ -125,6 +129,8 @@ class LodelSession {
 	}
 
 	getAvailableTypes(idParent: number) {
+		if (this.headers == null) return undefinedHeadersReject();
+
 		const postUrl = `/lodel/edition/index.php?id=${String(idParent)}`;
 		const getConfig = {
 			url: urljoin(this.baseUrl, postUrl),
@@ -163,6 +169,8 @@ class LodelSession {
 	}
 
 	uploadDoc({ path, idParent, idType }: Doc) {
+		if (this.headers == null) return undefinedHeadersReject();
+
 		// 1. Submit upload form and get OTX task id
 		const submitUpload = () => {
 			const postUrl = `/lodel/edition/oochargement.php?idparent=${String(idParent)}&idtype=${String(idType)}`;
