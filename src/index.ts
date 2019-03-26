@@ -1,3 +1,4 @@
+import * as cheerio from "cheerio";
 import { IncomingMessage, IncomingHttpHeaders } from "http";
 import * as request from "request";
 import { parse } from "url";
@@ -16,6 +17,11 @@ interface Entity {
 	idParent: number | undefined, 
 	idType: number | undefined, 
 	title: string | undefined
+}
+
+interface EntityType {
+	name: string,
+	id: number
 }
 
 const htpasswd = {
@@ -103,6 +109,44 @@ class LodelSession {
 			};
 			return request.post(postConfig, done);
 		});
+	}
+
+	getAvailableTypes(idParent: number) {
+		const postUrl = `/lodel/edition/index.php?id=${String(idParent)}`;
+		const getConfig = {
+			url: urljoin(this.baseUrl, postUrl),
+			followAllRedirects: true,
+			headers: this.headers
+		};
+
+		return new Promise(function (resolve, reject) {
+			const done = (err: Error, response: request.Response, body: any) => {
+				if (!err && response.statusCode !== 200) {
+					err = new Error(`Error while getting types: unexpected status code ${response.statusCode}`);
+				}
+				if (err) return reject(err);
+
+				const availableTypes = ((body) => {
+					const $ = cheerio.load(body);
+					const types: EntityType[] = [];
+					$("#addEntity select option").each(function (this: Cheerio) {
+						const value = $(this).attr("value");
+						if (value == null) return;
+						const id = (value.match(/\d+$/) || [])[0];
+						if (id == null) return;
+						const name = $(this).text().trim();
+						return types.push({name, id: Number(id)});
+					});
+					return types;
+				})(body);
+
+				if (availableTypes == null) {
+					reject(new Error("Could not get types"));
+				}
+				return resolve(availableTypes);
+			};
+			return request.get(getConfig, done);
+		})
 	}
 }
 
