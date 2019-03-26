@@ -13,10 +13,10 @@ interface Credentials {
 	password: string 
 }
 
-interface Entity {
-	idParent: number | undefined, 
-	idType: number | undefined, 
-	title: string | undefined
+interface PublicationOptions {
+	idParent: number, 
+	idType: number, 
+	title?: string
 }
 
 interface EntityType {
@@ -65,7 +65,7 @@ class LodelSession {
 		});
 	}
 
-	createPublication({ idParent, idType, title }: Entity) {
+	createPublication({ idParent, idType, title = "New publication" }: PublicationOptions) {
 		const postUrl = "/lodel/edition/index.php";
 		const postConfig = {
 			url: urljoin(this.baseUrl, postUrl),
@@ -79,7 +79,7 @@ class LodelSession {
 				idtype: idType,
 				creationmethod: "form",
 				edit: 1,
-				"data[titre]": title ? title : "New publication",
+				"data[titre]": title,
 				"data[datepubli]": "today",
 				creationinfo: "xhtml",
 				visualiserdocument: true
