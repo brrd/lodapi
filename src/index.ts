@@ -31,10 +31,19 @@ interface Doc {
   idType: number
 }
 
+interface Pdf {
+  filepath: string,
+  docId: number
+}
+
 interface OtxTask {
   taskId: number,
   status?: string | undefined,
   docId?: number
+}
+
+interface FormValues { 
+  [key: string]: string 
 }
 
 const htpasswd = {
@@ -287,7 +296,95 @@ class LodelSession {
       .then(validateTask);
   }
 
-  uploadPdf()
+  // WARNING: this feature is experimental and can potentially cause data loss
+  uploadPdf({ filepath, docId }: Pdf) {
+    if (this.headers == null) return undefinedHeadersReject();
+
+    // We need to submit again the entire form with its correct values in order to upload the pdf :-(
+    const getFormValues = () => {
+      const postUrl = `/lodel/edition/index.php?do=view&id=${String(docId)}`;
+      const getConfig = {
+        url: urljoin(this.baseUrl, postUrl),
+        followAllRedirects: true,
+        headers: this.headers
+      };
+
+      return new Promise<FormValues>((resolve, reject) => {
+        const done = (err: Error, response: request.Response, body: any) => {
+          if (!err && response.statusCode !== 200) {
+            err = new Error(`Erreur while get form values before uploading pdf '${filepath}': unexpected status code ${response.statusCode}`);
+          }
+          if (err) return reject(err);
+
+          // Get form values
+          const $ = cheerio.load(body);
+          const form: FormValues = {};
+
+          $("[name]").each(function (this: Cheerio) {
+            const type = $(this).attr("type");
+            if (["button", "submit"].includes(type)) return;
+            const name = $(this).attr("name");
+            let value = $(this).val();
+            if (value == null && type === "checkbox") {
+              value = $(this).attr("checked");
+            }
+            if (value == null) return;
+
+            // Handle Lodel <select> specific controls for indexes selection
+            if (name.match(/^pool_candidats_/) != null) {
+              const $prev = $(this).prev("input");
+              if ($prev.length === 0) {
+                return new Error(`Can't get ${name} value`);
+              }
+              const prevName = $prev.attr("name");
+              value = Array.isArray(value) ? value.join(",") : value;
+              form[prevName] = value;
+            } else {
+              form[name] = value;
+            }
+          });
+
+          if (Object.keys(form).length === 0) {
+            return reject(new Error(`Could not get values from form '${String(docId)}'`));
+          }
+          return resolve(form);
+        };
+        return request.get(getConfig, done);
+      });
+    };
+
+    const submitForm = (form: FormValues) => {
+      const postUrl = `/lodel/edition/index.php?do=view&id=${String(docId)}`;
+      // Reinject data in form
+      const formData = Object.assign({}, form, {
+        do: "edit",
+        id: docId,
+        "data[alterfichier][radio]": "upload",
+        "data[alterfichier][upload]": createReadStream(filepath)
+      });
+      const postConfig = {
+        url: urljoin(this.baseUrl, postUrl),
+        followAllRedirects: true,
+        headers: this.headers,
+        formData
+      };
+
+      return new Promise(function (resolve, reject) {
+        const done = (err: Error, response: request.Response, body: any) => {
+          if (!err && response.statusCode !== 200) {
+            err = new Error(`Erreur while uploading pdf '${filepath}': unexpected status code ${response.statusCode}`);
+          }
+          if (err) return reject(err);
+          resolve(response);
+        };
+        return request.post(postConfig, done);
+      });
+    };
+
+    // Main
+    return getFormValues()
+      .then(submitForm);
+  }
 }
 
 module.exports = LodelSession;
