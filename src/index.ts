@@ -5,10 +5,6 @@ import * as request from "request";
 import { parse } from "url";
 import urljoin = require("url-join");
 
-interface LodelSessionOptions {
-  baseUrl: string
-}
-
 interface Credentials { 
   login: string, 
   password: string 
@@ -58,7 +54,7 @@ class LodelSession {
   baseUrl: string;
   headers: IncomingHttpHeaders | undefined;
 
-  constructor({baseUrl}: LodelSessionOptions) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
