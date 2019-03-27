@@ -26,7 +26,7 @@ interface EntityType {
 }
 
 interface Doc {
-  path: string,
+  filepath: string,
   idParent: number,
   idType: number
 }
@@ -168,7 +168,7 @@ class LodelSession {
     })
   }
 
-  uploadDoc({ path, idParent, idType }: Doc) {
+  uploadDoc({ filepath, idParent, idType }: Doc) {
     if (this.headers == null) return undefinedHeadersReject();
 
     // 1. Submit upload form and get OTX task id
@@ -183,7 +183,7 @@ class LodelSession {
           idtype: idType,
           fileorigin: "upload",
           mode: "strict",
-          file1: createReadStream(path)
+          file1: createReadStream(filepath)
         }
       };
 
@@ -273,7 +273,7 @@ class LodelSession {
           const href = response.request.uri.href;
           const docId = getDocId(href);
           if (docId == null) {
-            return reject(new Error(`Error while uploading '${path}': could not get id after upload`));
+            return reject(new Error(`Error while uploading '${filepath}': could not get id after upload`));
           }
           return resolve({ taskId, status, docId });
         };
@@ -286,6 +286,8 @@ class LodelSession {
       .then(getStatus)
       .then(validateTask);
   }
+
+  uploadPdf()
 }
 
 module.exports = LodelSession;
