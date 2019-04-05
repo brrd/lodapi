@@ -42,6 +42,12 @@ interface FormValues {
   [key: string]: string 
 }
 
+interface Entry {
+  id: number,
+  idType: number;
+  relatedEntities: number[]
+}
+
 const htpasswd = {
   user: "lodel",
   pass: "lodel",
@@ -380,6 +386,58 @@ class LodelSession {
     // Main
     return getFormValues()
       .then(submitForm);
+  }
+
+  getEntry (id: number) {
+    if (this.headers == null) return undefinedHeadersReject();
+
+    const postUrl = `/lodel/admin/index.php?do=view&id=${String(id)}&lo=entries`;
+    const getConfig = {
+      url: urljoin(this.baseUrl, postUrl),
+      followAllRedirects: true,
+      headers: this.headers
+    };
+
+    return new Promise(function (resolve, reject) {
+      const done = (err: Error, response: request.Response, body: any) => {
+        if (!err && response.statusCode !== 200) {
+          err = new Error(`Error while getting entry: unexpected status code ${response.statusCode}`);
+        }
+        if (err) return reject(err);
+
+        const $ = cheerio.load(body);
+        const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
+        const idType = Number(idTypeStr);
+        if (!idType) {
+          return reject(new Error(`Error: idType not found on entry ${id}`));
+        }
+
+        const relatedEntities: number[] = [];
+        let errorFound = false;
+        $(".listEntities li").each(function (this: Cheerio) {
+          const href = $(this).find(".action .move + .item a").eq(0).attr("href");
+          const match = (href.match(/\d+$/) || [])[0];
+          if (match.length > 0) {
+            const id = Number(match);
+            relatedEntities.push(id);
+          } else {
+            errorFound = true;
+            return false;
+          }
+        });
+        if (errorFound) {
+          return reject(new Error(`Error: missing related entity id in entry ${id}`));
+        }
+        
+        const entry:Entry = {
+          id,
+          idType,
+          relatedEntities
+        }
+        resolve(entry);
+      };
+      return request.get(getConfig, done);
+    });
   }
 }
 
