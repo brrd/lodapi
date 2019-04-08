@@ -2,10 +2,19 @@
 
 > Node.js API for [Lodel](https://github.com/OpenEdition/lodel/)
 
+Note: The implementation of this toolbox is done according to my personal needs and this library is not intended to offer an exhaustive API. However feel free to create issues or to contribute if you want to add features that meet your own specific needs.
+
 ## Installation
 
 ```
 npm i lodapi
+```
+
+or clone this repo and run:
+
+```
+npm install
+npm run build
 ```
 
 ## Usage
@@ -24,7 +33,6 @@ session.auth({ login: "user", password: "pwd" })
   })
   .catch(console.error);
 ```
-
 
 ## LodelSession methods
 
