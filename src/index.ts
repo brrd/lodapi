@@ -482,6 +482,35 @@ class LodelSession {
       });
     });
   }
+
+  dissociateAllEntities(idEntry: number, idType?: number) {
+    const dissociate = (idEntry: number, idType: number, resolve: Function, reject: Function) => {
+      const postUrl = `/lodel/admin/index.php?do=massassoc&idtype=${idType}&lo=entries&edit=1&identries[0]=${idEntry}_${idType}&entitiesset=1`;
+      const postConfig = {
+        url: urljoin(this.baseUrl, postUrl),
+        followAllRedirects: true,
+        headers: this.headers
+      };
+
+      const done = (err: Error, response: request.Response, body: any) => {
+        if (!err && response.statusCode !== 200) {
+          err = new Error(`Error while connecting entries: unexpected status code ${response.statusCode}`);
+        }
+        if (err) return reject(err);
+        resolve();
+      };
+      return request.get(postConfig, done);
+    }
+
+    return new Promise((resolve, reject) => {
+      if (idType) {
+        return dissociate(idEntry, idType, resolve, reject);
+      }
+      this.getEntry(idEntry).then((entry: Entry) => {
+        dissociate(idEntry, entry.idType, resolve, reject);
+      });
+    });
+  }
 }
 
 module.exports = LodelSession;

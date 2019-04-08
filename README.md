@@ -76,6 +76,12 @@ Connect entities with entries.
 
 If `idType` is declared then it will be used as `idtype` for all entries. Otherwise the script will run `getEntry()` on each individual entry in order to find its type (= additionnal requests).
 
+### `dissociateAllEntities(idEntry: number, idType?: number)`
+
+Remove association of `idEntry` with all entries.
+
+If `idType` is not declared the script will run `getEntry()` to find it from idEntry (= additionnal request).
+
 ## MIT License
 
 Copyright (c) 2019 Thomas Brouard
