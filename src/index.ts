@@ -398,7 +398,7 @@ class LodelSession {
       headers: this.headers
     };
 
-    return new Promise(function (resolve, reject) {
+    return new Promise<Entry>(function (resolve, reject) {
       const done = (err: Error, response: request.Response, body: any) => {
         if (!err && response.statusCode !== 200) {
           err = new Error(`Error while getting entry: unexpected status code ${response.statusCode}`);
@@ -428,13 +428,7 @@ class LodelSession {
         if (errorFound) {
           return reject(new Error(`Error: missing related entity id in entry ${id}`));
         }
-        
-        const entry:Entry = {
-          id,
-          idType,
-          relatedEntities
-        }
-        resolve(entry);
+        resolve({ id, idType, relatedEntities });
       };
       return request.get(getConfig, done);
     });
