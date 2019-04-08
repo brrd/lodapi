@@ -434,7 +434,7 @@ class LodelSession {
     });
   }
 
-  connectEntries(idEntities: number[], idEntries: number[], idType?: number) {
+  associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
     if (this.headers == null) return undefinedHeadersReject();
 
     // Create entries query string

@@ -62,7 +62,7 @@ Get information about entry:
 }
 ```
 
-### `connectEntries(idEntities: number[], idEntries: number[], idType?: number)`
+### `associateEntries(idEntities: number[], idEntries: number[], idType?: number)`
 
 Connect entities with entries. 
 
