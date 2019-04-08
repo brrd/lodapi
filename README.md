@@ -1,6 +1,6 @@
 # Lodapi
 
-> API for [Lodel](https://github.com/OpenEdition/lodel/)
+> Node.js API for [Lodel](https://github.com/OpenEdition/lodel/)
 
 ## Installation
 
@@ -16,7 +16,7 @@ const LodelSession = require("lodapi");
 // Instanciate the class
 const session = new LodelSession("https://url-to-lodel-website.com");
 
-// First of all we need to anthenticate
+// First of all authenticate
 session.auth({ login: "user", password: "pwd" })
   .then(() => {
     // Then use API here
@@ -28,29 +28,29 @@ session.auth({ login: "user", password: "pwd" })
 
 ## LodelSession methods
 
-### `auth({login, password})`
+### `auth({login: string, password: string})`
 
 Authenticate in Lodel. See "Usage" on top.
 
-### `createPublication({ idParent, idType, title})`
+### `createPublication({ idParent: number, idType: number, title?: string})`
 
 Create a new publication with type `idType` in parent `idParent`. `title` parameter is optional (default = "New publication").
 
-### `getAvailableTypes(idParent)`
+### `getAvailableTypes(idParent: number)`
 
 List possible types for children of `idParent`.
 
-### `uploadDoc({ filepath, idParent, idType })`
+### `uploadDoc({ filepath: string, idParent: string, idType: string })`
 
 Upload a document (using OTX) located at `filepath` in publication `idParent` with type `idType`.
 
-### `uploadPdf({ filepath, docId })`
+### `uploadPdf({ filepath: string, docId: number })`
 
 **WARNING: this feature is still experimental and can potentially cause data loss.**
 
 Upload a PDF located a `filepath` as `docId` alterfichier.
 
-### `getEntry(id)`
+### `getEntry(id: number)`
 
 Get information about entry:
 
@@ -61,6 +61,12 @@ Get information about entry:
   relatedEntities: number[]
 }
 ```
+
+### `connectEntries(idEntities: number[], idEntries: number[], idType?: number)`
+
+Connect entities with entries. 
+
+If `idType` is declared then it will be used as `idtype` for all entries. Otherwise the script will run `getEntry()` on each individual entry in order to find its type (= additionnal requests).
 
 ## MIT License
 
