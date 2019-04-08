@@ -434,40 +434,53 @@ class LodelSession {
     });
   }
 
-  connectEntries(idEntities: number[], idEntries: number[]) {
+  connectEntries(idEntities: number[], idEntries: number[], idType?: number) {
     if (this.headers == null) return undefinedHeadersReject();
 
-    // Create entities query string
-    const entitiesQuery = idEntities.reduce((query: string, idEntity: number, i: number) => `${query}&identities[${i}]=${idEntity}`, "");
+    // Create entries query string
+    const getEntriesQuery = new Promise<string>((resolve, reject) => {
+      if (idType) {
+        const entriesQuery = idEntries.reduce((query: string, idEntry: number, i: number) => `${query}&identries[${i}]=${idEntry}_${idType}`, "");
+        return resolve(entriesQuery);
+      }
+      
+      // Get idTypes for each entry if a global idType was not defined
+      const getEntriesPromises = idEntries.map((id) => this.getEntry(id));
+      return Promise.all(getEntriesPromises)
+        .then((entries) => {
+          const entriesQuery = entries.reduce((query: string, entry: Entry, i: number) => {
+            const { id, idType } = entry;
+            return `${query}&identries[${i}]=${id}_${idType}`;
+          }, "");
+          resolve(entriesQuery);
+        })
+        .catch(reject);
+    });
 
-    // Get entries
-    // FIXME: in most situations we probably already know the type, so this request should be skipped
-    const getEntriesPromises = idEntries.map((id) => this.getEntry(id));
-    return Promise.all(getEntriesPromises)
-      .then((entries) => {
-        const entriesQuery = entries.reduce((query: string, entry: Entry, i: number) => {
-          const { id, idType } = entry;
-          return `${query}&identries[${i}]=${id}_${idType}`
-        }, "");
+    // Post request
+    return getEntriesQuery.then((entriesQuery) => {
+      // Create entities query string
+      const entitiesQuery = idEntities.reduce((query: string, idEntity: number, i: number) => `${query}&identities[${i}]=${idEntity}`, "");
 
-        const postUrl = `/lodel/admin/index.php?do=massassoc&lo=entries&edit=1&associate=1${entitiesQuery}${entriesQuery}`;
-        const getConfig = {
-          url: urljoin(this.baseUrl, postUrl),
-          followAllRedirects: true,
-          headers: this.headers
+      // Post config
+      const postUrl = `/lodel/admin/index.php?do=massassoc&lo=entries&edit=1&associate=1${entitiesQuery}${entriesQuery}`;
+      const getConfig = {
+        url: urljoin(this.baseUrl, postUrl),
+        followAllRedirects: true,
+        headers: this.headers
+      };
+
+      return new Promise(function (resolve, reject) {
+        const done = (err: Error, response: request.Response, body: any) => {
+          if (!err && response.statusCode !== 200) {
+            err = new Error(`Error while connecting entries: unexpected status code ${response.statusCode}`);
+          }
+          if (err) return reject(err);
+          resolve();
         };
-
-        return new Promise(function (resolve, reject) {
-          const done = (err: Error, response: request.Response, body: any) => {
-            if (!err && response.statusCode !== 200) {
-              err = new Error(`Error while connecting entries: unexpected status code ${response.statusCode}`);
-            }
-            if (err) return reject(err);
-            resolve();
-          };
-          return request.get(getConfig, done);
-        });
+        return request.get(getConfig, done);
       });
+    });
   }
 }
 
