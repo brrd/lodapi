@@ -433,6 +433,42 @@ class LodelSession {
       return request.get(getConfig, done);
     });
   }
+
+  connectEntries(idEntities: number[], idEntries: number[]) {
+    if (this.headers == null) return undefinedHeadersReject();
+
+    // Create entities query string
+    const entitiesQuery = idEntities.reduce((query: string, idEntity: number, i: number) => `${query}&identities[${i}]=${idEntity}`, "");
+
+    // Get entries
+    // FIXME: in most situations we probably already know the type, so this request should be skipped
+    const getEntriesPromises = idEntries.map((id) => this.getEntry(id));
+    return Promise.all(getEntriesPromises)
+      .then((entries) => {
+        const entriesQuery = entries.reduce((query: string, entry: Entry, i: number) => {
+          const { id, idType } = entry;
+          return `${query}&identries[${i}]=${id}_${idType}`
+        }, "");
+
+        const postUrl = `/lodel/admin/index.php?do=massassoc&lo=entries&edit=1&associate=1${entitiesQuery}${entriesQuery}`;
+        const getConfig = {
+          url: urljoin(this.baseUrl, postUrl),
+          followAllRedirects: true,
+          headers: this.headers
+        };
+
+        return new Promise(function (resolve, reject) {
+          const done = (err: Error, response: request.Response, body: any) => {
+            if (!err && response.statusCode !== 200) {
+              err = new Error(`Error while connecting entries: unexpected status code ${response.statusCode}`);
+            }
+            if (err) return reject(err);
+            resolve();
+          };
+          return request.get(getConfig, done);
+        });
+      });
+  }
 }
 
 module.exports = LodelSession;
