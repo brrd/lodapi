@@ -1,9 +1,10 @@
 import * as cheerio from "cheerio";
-import { createReadStream, stat } from "fs";
+import { createReadStream } from "fs";
 import { IncomingMessage, IncomingHttpHeaders } from "http";
 import * as request from "request";
 import { parse } from "url";
 import urljoin = require("url-join");
+import { parseForm } from "./utils";
 
 interface RequestOptions {
   description: string,
@@ -50,10 +51,6 @@ interface OtxTask {
   taskId: number,
   status?: string | undefined,
   docId?: number
-}
-
-interface FormValues { 
-  [key: string]: string 
 }
 
 interface Entry {
@@ -288,68 +285,33 @@ class LodelSession {
   // WARNING: this feature is experimental and can potentially cause data loss
   uploadPdf({ filepath, docId }: Pdf) {
     // We need to submit again the entire form with its correct values in order to upload the pdf :-(
-    const getFormValues = () => {
-      const r = this.request({
-        description: "uploadPdf.getFormValues",
+    const getForm = () => {
+      return this.request({
+        description: "uploadPdf(1)",
         exec: `/lodel/edition/index.php?do=view&id=${docId}`,
         method: "get"
       });
-
-      return r.then(({ response, body }: RequestResult) => {
-        // Get form values
-        const $ = cheerio.load(body);
-        const form: FormValues = {};
-
-        $("[name]").each(function (this: Cheerio) {
-          const type = $(this).attr("type");
-          if (["button", "submit"].includes(type)) return;
-          const name = $(this).attr("name");
-          let value = $(this).val();
-          if (value == null && type === "checkbox") {
-            value = $(this).attr("checked");
-          }
-          if (value == null) return;
-
-          // Handle Lodel <select> specific controls for indexes selection
-          if (name.match(/^pool_candidats_/) != null) {
-            const $prev = $(this).prev("input");
-            if ($prev.length === 0) {
-              return new Error(`Can't get ${name} value`);
-            }
-            const prevName = $prev.attr("name");
-            value = Array.isArray(value) ? value.join(",") : value;
-            form[prevName] = value;
-          } else {
-            form[name] = value;
-          }
-        });
-
-        if (Object.keys(form).length === 0) {
-          throw Error(`Could not get values from form '${docId}'`);
-        }
-        return form;
-      });
     };
 
-    // Then reinject data in form and submit
-    const submitForm = (form: FormValues) => {
+    const submitNewForm = ({ response, body }: RequestResult) => {
+      // Get form values
+      const form = parseForm(body);
       const formData = Object.assign({}, form, {
         do: "edit",
         id: docId,
         "data[alterfichier][radio]": "upload",
         "data[alterfichier][upload]": createReadStream(filepath)
       });
-
       return this.request({
-        description: "uploadDoc.submitForm",
+        description: "uploadPdf(2)",
         exec: `/lodel/edition/index.php?do=view&id=${docId}`,
         method: "post",
         config: { formData }
       });
     };
-
+    
     // Main
-    return getFormValues().then(submitForm);
+    return getForm().then(submitNewForm);
   }
 
   getEntry (id: number) {
