@@ -4,7 +4,7 @@ import { IncomingMessage, IncomingHttpHeaders } from "http";
 import * as request from "request";
 import { parse } from "url";
 import urljoin = require("url-join");
-import { parseForm } from "./utils";
+import { parseForm, parseIndex } from "./utils";
 
 interface RequestOptions {
   description: string,
@@ -320,27 +320,8 @@ class LodelSession {
       exec: `/lodel/admin/index.php?do=view&id=${id}&lo=entries`,
       method: "get"
     });
-
     return r.then(({ response, body }: RequestResult) => {
-      const $ = cheerio.load(body);
-      const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
-      const idType = Number(idTypeStr);
-      if (!idType) {
-        throw Error(`Error: idType not found on entry ${id}`);
-      }
-
-      const relatedEntities: number[] = [];
-      $(".listEntities li").each(function (this: Cheerio) {
-        const href = $(this).find(".action .move + .item a").eq(0).attr("href");
-        const match = (href.match(/\d+$/) || [])[0];
-        if (match.length > 0) {
-          const id = Number(match);
-          relatedEntities.push(id);
-        } else {
-          throw Error(`Error: missing related entity id in entry ${id}`);
-        }
-      });
-      return { id, idType, relatedEntities };
+      return parseIndex(body, id);
     });
   }
 
