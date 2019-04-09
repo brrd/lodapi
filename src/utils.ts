@@ -1,18 +1,15 @@
 import * as cheerio from "cheerio";
 
-export function parseForm(body: any) {
+export function parseForm(body: any, parentSelector?: string) {
   // Get form values
   const $ = cheerio.load(body);
   const form: { [key: string]: string } = {};
 
-  $("[name]").each(function (this: Cheerio) {
+  $(`${parentSelector} [name]`).each(function (this: Cheerio) {
     const type = $(this).attr("type");
     if (["button", "submit"].includes(type)) return;
     const name = $(this).attr("name");
-    let value = $(this).val();
-    if (value == null && type === "checkbox") {
-      value = $(this).attr("checked");
-    }
+    let value = type === "checkbox" ? $(this).attr("checked") : $(this).val();
     if (value == null) return;
 
     // Handle Lodel <select> specific controls for indexes selection

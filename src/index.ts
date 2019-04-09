@@ -344,6 +344,32 @@ class LodelSession {
     });
   }
 
+  editEntryName(id: number, name: string) {
+    // Same than uploadPdf() but probably less risky because we don't have weird Lodel <select> in this form
+    const getForm = () => {
+      return this.request({
+        description: "editEntryName(1)",
+        exec: `/lodel/admin/index.php?do=view&id=${id}&lo=entries`,
+        method: "get"
+      });
+    };
+
+    const submitNewForm = ({ response, body }: RequestResult) => {
+      const form = parseForm(body, "form.entry");
+      const formData = Object.assign({}, form, {
+        "data[nom]": name
+      });
+      return this.request({
+        description: "editEntryName(2)",
+        exec: `/lodel/admin/index.php`,
+        method: "post",
+        config: { formData }
+      });
+    };
+
+    return getForm().then(submitNewForm);
+  }
+
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
     // Create entries query string
     const getEntriesQuery = new Promise<string>((resolve, reject) => {

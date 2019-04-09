@@ -70,6 +70,10 @@ Get information about entry:
 }
 ```
 
+### `editEntryName(id: number, name: string)`
+
+Set entry `id` name to `name`.
+
 ### `associateEntries(idEntities: number[], idEntries: number[], idType?: number)`
 
 Connect entities with entries. 
