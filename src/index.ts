@@ -76,28 +76,7 @@ class LodelSession {
     this.baseUrl = baseUrl;
   }
 
-  request({ description, exec, method, config = {}, expectedStatusCode = 200, isAuth = false }: RequestOptions) {
-    if (!isAuth && this.headers == null) return Promise.reject(`[request: ${description}] Session headers is undefined. Please make sure auth() was called first.`);
-
-    const requestConfig = Object.assign({}, {
-      url: urljoin(this.baseUrl, exec),
-      followAllRedirects: true,
-      headers: this.headers
-    }, config);
-
-    return new Promise<RequestResult>(function (resolve, reject) {
-      const callback = (err: Error, response: request.Response, body: any) => {
-        if (!err && response.statusCode !== expectedStatusCode) {
-          err = new Error(`[request: ${description}] Unexpected status code: ${response.statusCode}`);
-        }
-        if (err) return reject(err);
-        resolve({ response, body });
-      };
-      request[method](requestConfig, callback);
-    });
-  }
-
-  auth({login, password}: Credentials) {
+  auth({ login, password }: Credentials) {
     const r = this.request({
       description: "auth",
       exec: "/lodel/edition/login.php",
@@ -119,6 +98,56 @@ class LodelSession {
     return r.then(({ response, body }: RequestResult) => {
       this.headers = response.request.headers;
       return response;
+    });
+  }
+
+  request({ description, exec, method, config = {}, expectedStatusCode = 200, isAuth = false }: RequestOptions) {
+    if (!isAuth && this.headers == null) return Promise.reject(`[request: ${description}] Session headers is undefined. Please make sure auth() was called first.`);
+
+    const requestConfig = Object.assign({}, {
+      url: urljoin(this.baseUrl, exec),
+      followAllRedirects: true,
+      headers: this.headers
+    }, config);
+
+    return new Promise<RequestResult>(function (resolve, reject) {
+      const callback = (err: Error, response: request.Response, body: any) => {
+        if (!err && response.statusCode !== expectedStatusCode) {
+          err = new Error(`[request: ${description}] Unexpected status code: ${response.statusCode}`);
+        }
+        if (err) return reject(err);
+        resolve({ response, body });
+      };
+      request[method](requestConfig, callback);
+    });
+  }
+
+  getAvailableTypes(idParent: number) {
+    const r = this.request({
+      description: "getAvailableTypes",
+      exec: `/lodel/edition/index.php?id=${idParent}`,
+      method: "get"
+    });
+
+    return r.then(({ response, body }: RequestResult) => {
+      const availableTypes = ((body) => {
+        const $ = cheerio.load(body);
+        const types: EntityType[] = [];
+        $("#addEntity select option").each(function (this: Cheerio) {
+          const value = $(this).attr("value");
+          if (value == null) return;
+          const id = (value.match(/\d+$/) || [])[0];
+          if (id == null) return;
+          const name = $(this).text().trim();
+          return types.push({ name, id: Number(id) });
+        });
+        return types;
+      })(body);
+
+      if (availableTypes == null) {
+        throw Error("Could not get types");
+      }
+      return availableTypes;
     });
   }
 
@@ -158,35 +187,6 @@ class LodelSession {
         throw Error(`Can't get id of publication '${title}'`);
       }
       return publiId;
-    });
-  }
-
-  getAvailableTypes(idParent: number) {
-    const r = this.request({
-      description: "getAvailableTypes",
-      exec: `/lodel/edition/index.php?id=${idParent}`,
-      method: "get"
-    });
-
-    return r.then(({ response, body }: RequestResult) => {
-      const availableTypes = ((body) => {
-        const $ = cheerio.load(body);
-        const types: EntityType[] = [];
-        $("#addEntity select option").each(function (this: Cheerio) {
-          const value = $(this).attr("value");
-          if (value == null) return;
-          const id = (value.match(/\d+$/) || [])[0];
-          if (id == null) return;
-          const name = $(this).text().trim();
-          return types.push({ name, id: Number(id) });
-        });
-        return types;
-      })(body);
-
-      if (availableTypes == null) {
-        throw Error("Could not get types");
-      }
-      return availableTypes;
     });
   }
 
