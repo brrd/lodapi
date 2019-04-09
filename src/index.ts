@@ -428,6 +428,14 @@ class LodelSession {
     }
     return this.getEntry(idEntry).then(dissociate);
   }
+
+  deleteEntry(id: number) {
+    return this.request({
+      description: "deleteEntry",
+      exec: `/lodel/admin/index.php?do=delete&id=${id}&lo=entries`,
+      method: "get"
+    });
+  }
 }
 
 module.exports = LodelSession;

@@ -82,6 +82,10 @@ Remove association of `idEntry` with all entries.
 
 If `idType` is not declared the script will run `getEntry()` to find it from idEntry (= additionnal request).
 
+### `deleteEntry(id: number)`
+
+Delete entry `id`.
+
 ## MIT License
 
 Copyright (c) 2019 Thomas Brouard
