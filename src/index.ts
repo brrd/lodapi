@@ -368,6 +368,14 @@ class LodelSession {
     return getForm().then(submitNewForm);
   }
 
+  deleteIndex(id: number, type: "entries" | "persons") {
+    return this.request({
+      description: `deleteIndex(id:${id})`,
+      exec: `/lodel/admin/index.php?do=delete&id=${id}&lo=${type}`,
+      method: "get"
+    });
+  }
+
   getEntry (id: number) {
     return this.getIndex(id, "entries");
   }
@@ -426,11 +434,7 @@ class LodelSession {
   }
 
   deleteEntry(id: number) {
-    return this.request({
-      description: "deleteEntry",
-      exec: `/lodel/admin/index.php?do=delete&id=${id}&lo=entries`,
-      method: "get"
-    });
+    return this.deleteIndex(id, "entries");
   }
 
   getPerson(id: number) {
@@ -446,6 +450,10 @@ class LodelSession {
       data["data[nomfamille]"] = familyName;
     }
     return this.editIndex(id, "persons", data);
+  }
+
+  deletePerson(id: number) {
+    return this.deleteIndex(id, "persons");
   }
 }
 
