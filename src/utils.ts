@@ -32,24 +32,3 @@ export function parseForm(body: any, parentSelector?: string) {
   return form;
 };
 
-export function parseIndex(body: any, id: number) {
-  const $ = cheerio.load(body);
-  const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
-  const idType = Number(idTypeStr);
-  if (!idType) {
-    throw Error(`Error: idType not found on index ${id}`);
-  }
-
-  const relatedEntities: number[] = [];
-  $(".listEntities li").each(function (this: Cheerio) {
-    const href = $(this).find(".action .move + .item a").eq(0).attr("href");
-    const match = (href.match(/\d+$/) || [])[0];
-    if (match.length > 0) {
-      const id = Number(match);
-      relatedEntities.push(id);
-    } else {
-      throw Error(`Error: missing related entity id in index ${id}`);
-    }
-  });
-  return { id, idType, relatedEntities };
-}

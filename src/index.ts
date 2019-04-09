@@ -4,7 +4,7 @@ import { IncomingMessage, IncomingHttpHeaders } from "http";
 import * as request from "request";
 import { parse } from "url";
 import urljoin = require("url-join");
-import { parseForm, parseIndex } from "./utils";
+import { parseForm } from "./utils";
 
 interface RequestOptions {
   description: string,
@@ -314,32 +314,49 @@ class LodelSession {
     return getForm().then(submitNewForm);
   }
 
-  getEntry (id: number) {
+  getIndex(id: number, type: "entries" | "persons") {
     const r = this.request({
-      description: "getEntry",
-      exec: `/lodel/admin/index.php?do=view&id=${id}&lo=entries`,
+      description: `getIndex(id:${id})`,
+      exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${type}`,
       method: "get"
     });
+
     return r.then(({ response, body }: RequestResult) => {
-      return parseIndex(body, id);
+      const $ = cheerio.load(body);
+      const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
+      const idType = Number(idTypeStr);
+      if (!idType) {
+        throw Error(`Error: idType not found on index ${id}`);
+      }
+
+      const relatedEntities: number[] = [];
+      $(".listEntities li").each(function (this: Cheerio) {
+        const href = $(this).find(".action .move + .item a").eq(0).attr("href");
+        const match = (href.match(/\d+$/) || [])[0];
+        if (match.length > 0) {
+          const id = Number(match);
+          relatedEntities.push(id);
+        } else {
+          throw Error(`Error: missing related entity id in index ${id}`);
+        }
+      });
+      return { id, idType, relatedEntities };
     });
   }
 
-  editEntryName(id: number, name: string) {
+  editIndex(id: number, type: "entries" | "persons", data: {}) {
     // Same than uploadPdf() but probably less risky because we don't have weird Lodel <select> in this form
     const getForm = () => {
       return this.request({
-        description: "editEntryName(1)",
-        exec: `/lodel/admin/index.php?do=view&id=${id}&lo=entries`,
+        description: `editIndex(id:${id})`,
+        exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${type}`,
         method: "get"
       });
     };
 
     const submitNewForm = ({ response, body }: RequestResult) => {
       const form = parseForm(body, "form.entry");
-      const formData = Object.assign({}, form, {
-        "data[nom]": name
-      });
+      const formData = Object.assign({}, form, data);
       return this.request({
         description: "editEntryName(2)",
         exec: `/lodel/admin/index.php`,
@@ -349,6 +366,16 @@ class LodelSession {
     };
 
     return getForm().then(submitNewForm);
+  }
+
+  getEntry (id: number) {
+    return this.getIndex(id, "entries");
+  }
+
+  editEntryName(id: number, name: string) {
+    return this.editIndex(id, "entries", {
+      "data[nom]": name
+    });
   }
 
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
@@ -404,6 +431,21 @@ class LodelSession {
       exec: `/lodel/admin/index.php?do=delete&id=${id}&lo=entries`,
       method: "get"
     });
+  }
+
+  getPerson(id: number) {
+    return this.getIndex(id, "persons");
+  }
+
+  editPersonName(id: number, name?: string, familyName?: string) {
+    const data: { [key: string]: string } = {};
+    if (name) {
+      data["data[prenom]"] = name;
+    }
+    if (familyName) {
+      data["data[nomfamille]"] = familyName;
+    }
+    return this.editIndex(id, "persons", data);
   }
 }
 
