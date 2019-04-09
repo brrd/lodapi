@@ -58,9 +58,11 @@ Upload a document (using OTX) located at `filepath` in publication `idParent` wi
 
 Upload a PDF located a `filepath` as `docId` alterfichier.
 
-### `getEntry(id: number)`
 
-Get information about entry:
+
+### `getIndex(id: number, type: "entries" | "persons")`
+
+Get information about index `id`:
 
 ```javascript
 {
@@ -69,6 +71,18 @@ Get information about entry:
   relatedEntities: number[]
 }
 ```
+
+This method has two aliases: `getEntry(id: number)` and `getPerson(id: number)`.
+
+### `editIndex(id: number, type: "entries" | "persons", data: {})`
+
+Edit index `id` by posting `data` in the related edit form.
+
+### `deleteIndex(id: number, type: "entries" | "persons")`
+
+Delete index `id` with type "entries" or "persons".
+
+This method has two aliases: `deleteEntry(id: number)` and `deletePerson(id: number)`.
 
 ### `editEntryName(id: number, name: string)`
 
@@ -89,6 +103,10 @@ If `idType` is not declared the script will run `getEntry()` to find it from idE
 ### `deleteEntry(id: number)`
 
 Delete entry `id`.
+
+### `editPersonName(id: number, name?: string, familyName?: string)`
+
+Set person `id` name and/ou family name.
 
 ## MIT License
 
