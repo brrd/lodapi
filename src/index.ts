@@ -56,7 +56,8 @@ interface OtxTask {
 interface Entry {
   id: number,
   idType: number;
-  relatedEntities?: number[]
+  relatedEntities?: number[],
+  data?: { [key: string]: string }
 }
 
 const htpasswd = {
@@ -340,7 +341,14 @@ class LodelSession {
           throw Error(`Error: missing related entity id in index ${id}`);
         }
       });
-      return { id, idType, relatedEntities };
+
+      const data: { [key: string]: string } = {};
+      $("form.entry input[name^='data']").each(function (this: Cheerio) {
+        const name = $(this).attr("id");
+        const value = $(this).attr("value");
+        data[name] = value;
+      });
+      return { id, idType, relatedEntities, data };
     });
   }
 

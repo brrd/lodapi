@@ -68,7 +68,8 @@ Get information about index `id`:
 {
   id: number,
   idType: number;
-  relatedEntities: number[]
+  relatedEntities?: number[],
+  data?: { [key: string]: string }
 }
 ```
 
