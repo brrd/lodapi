@@ -34,6 +34,10 @@ session.auth({ login: "user", password: "pwd" })
   .catch(console.error);
 ```
 
+## Warning
+
+Methods which submit data using the Lodel entity form can cause data loss depending on which type of field is visible in the form. This is due to some weird fields used by Lodel, especially for adding entities to entries. The safest way to avoid such problems is to hide thoses fields from the admin panel before using any dangerous method.
+
 ## LodelSession methods
 
 ### `auth({login: string, password: string})`
@@ -108,6 +112,20 @@ Delete entry `id`.
 ### `editPersonName(id: number, name?: string, familyName?: string)`
 
 Set person `id` name and/ou family name.
+
+### `resubmitEntity(docId: number)`
+
+Resubmit entity form.
+
+This is a workaround used in mergePersons(). When resubmitting an entity form, Lodel recreates the relations between entries and this entity. This is useful to remove duplicate entries : 1) rename all duplicate entries with the same (expected) name, 2) resubmit every associated entity. At the end all the entities will be related to the same entry (= the lowest id).
+
+**Since this method submits the entity form, it can cause data loss so be careful.**
+
+### `mergePersons(idBase: number, idPersons: number[])`
+
+Merge persons listed in `idPerson` in a person which will have the `idBase` data (the lowest id among all thoses persons will be kept by Lodel). It comes in very handy when cleaning the duplicates among authors.
+
+**Since this method submits the entity form, it can cause data loss so be careful.**
 
 ## MIT License
 
