@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 
-export function parseForm(body: any, parentSelector?: string) {
+export function parseForm(body: any, parentSelector = "") {
   // Get form values
   const $ = cheerio.load(body);
   const form: { [key: string]: string } = {};

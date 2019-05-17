@@ -344,7 +344,7 @@ class LodelSession {
 
       const data: { [key: string]: string } = {};
       $("form.entry input[name^='data']").each(function (this: Cheerio) {
-        const name = $(this).attr("id");
+        const name = $(this).attr("name");
         const value = $(this).attr("value");
         data[name] = value;
       });
@@ -352,7 +352,7 @@ class LodelSession {
     });
   }
 
-  editIndex(id: number, type: "entries" | "persons", data: {}) {
+  editIndex(id: number, type: "entries" | "persons", data?: {}) {
     // Same than uploadPdf() but probably less risky because we don't have weird Lodel <select> in this form
     const getForm = () => {
       return this.request({
@@ -462,6 +462,67 @@ class LodelSession {
 
   deletePerson(id: number) {
     return this.deleteIndex(id, "persons");
+  }
+
+  // WARNING: this one can be dangerous too (same than uploadPdf)!
+  // This is a workaround used in mergePersons()
+  // When resubmitting an entity form, Lodel recreates the relations between entries and this entity. This is useful to remove duplicate entries : 1) rename all duplicate entries with the same (expected) name, 2) resubmit every associated entity. At the end all the entities will be related to the same entry (= the lowest id)
+  // TODO: factorize this method with other which submit additionnal data to the entity form (eg: uploadPdf)
+  resubmitEntity(docId: number) {
+    const getForm = () => {
+      return this.request({
+        description: "resubmitEntity(1)",
+        exec: `/lodel/edition/index.php?do=view&id=${docId}`,
+        method: "get"
+      });
+    };
+
+    const submitNewForm = ({ response, body }: RequestResult) => {
+      const form = parseForm(body);
+      const formData = Object.assign({}, form);
+      return this.request({
+        description: "resubmitEntity(2)",
+        exec: `/lodel/edition/index.php?do=view&id=${docId}`,
+        method: "post",
+        config: { formData }
+      });
+    };
+
+    // Main
+    return getForm().then(submitNewForm);
+  }
+
+  // WARNING: this uses resubmitEntity so this can be unsafe
+  mergePersons(idBase: number, idPersons: number[]) {
+    const updatePersonsData = (base: Entry) => {
+      const data = base.data;
+      const proms = idPersons.map((id) => {
+        return this.editIndex(id, "persons", data)
+      });
+      return Promise.all(proms);
+    }
+
+    const getRelatedEntities = () => {
+      const all = idPersons.concat(idBase);
+      const proms = all.map((id) => this.getPerson(id));
+      return Promise.all(proms).then((persons) => {
+        const relatedEntities = persons.reduce((arr: number[], person) => {
+          return arr.concat(person.relatedEntities);
+        }, []);
+        const uniques = Array.from(new Set(relatedEntities));
+        return uniques;
+      });
+    }
+
+    const resubmitEntities = (entities: number[]) => {
+      const proms = entities.map((id) => this.resubmitEntity(id));
+      return Promise.all(proms);
+    }
+
+    return this.getPerson(idBase)
+      .then(updatePersonsData)
+      .then(getRelatedEntities)
+      .then(resubmitEntities);
   }
 }
 
