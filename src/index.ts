@@ -315,7 +315,7 @@ class LodelSession {
     return getForm().then(submitNewForm);
   }
 
-  getIndex(id: number, type: "entries" | "persons") {
+  getIndex(id: number, type: "entries" | "persons", outputRequestResult = false) {
     const r = this.request({
       description: `getIndex(id:${id})`,
       exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${type}`,
@@ -348,7 +348,11 @@ class LodelSession {
         const value = $(this).attr("value");
         data[name] = value;
       });
-      return { id, idType, relatedEntities, data };
+      const res: any = { id, idType, relatedEntities, data };
+      if (outputRequestResult) {
+        res.requestResult = { response, body };
+      }
+      return res;
     });
   }
 
