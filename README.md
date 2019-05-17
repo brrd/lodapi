@@ -58,7 +58,9 @@ Upload a document (using OTX) located at `filepath` in publication `idParent` wi
 
 Upload a PDF located a `filepath` as `docId` alterfichier.
 
-### `getIndex(id: number, type: "entries" | "persons", outputRequestResult = false)`
+
+
+### `getIndex(id: number, type: "entries" | "persons")`
 
 Get information about index `id`:
 
@@ -70,8 +72,6 @@ Get information about index `id`:
   data?: { [key: string]: string }
 }
 ```
-
-Set `outputRequestResult` to `true` to include requestResult in the returned object.
 
 This method has two aliases: `getEntry(id: number)` and `getPerson(id: number)`.
 
