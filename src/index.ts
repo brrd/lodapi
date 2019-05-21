@@ -8,41 +8,6 @@ import { parseForm } from "./utils";
 import  { createLogger, format, transports } from "winston";
 const { combine, timestamp, printf } = format;
 
-const myFormat = printf(({ level, message, timestamp }) => {
-  return `${timestamp} ${level}: ${message}`;
-});
-
-const logger = createLogger({
-  level: 'info',
-  format: combine(
-    timestamp(),
-    myFormat
-  ),
-  transports: [
-    //
-    // - Write to all logs with level `info` and below to `combined.log`
-    // - Write all logs error (and below) to `error.log`.
-    //
-    new transports.File({ filename: 'lodapi-error.log', level: 'error' }),
-    new transports.File({ filename: 'lodapi-combined.log' })
-  ]
-});
-
-//
-// If we're not in production then **ALSO** log to the `console`
-// with the colorized simple format.
-//
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new transports.Console({
-    format: format.combine(
-      format.colorize(),
-      format.simple()
-    )
-  }));
-}
-
-logger.info(`Starting Lodapi`);
-
 interface RequestOptions {
   description: string,
   exec: string,
@@ -103,18 +68,43 @@ const htpasswd = {
   sendImmediately: false
 };
 
+// Init Logger
+const myFormat = printf(({ level, message, timestamp }) => {
+  return `${timestamp} ${level}: ${message}`;
+});
+
+const logger = createLogger({
+  level: 'error',
+  format: combine(
+    timestamp(),
+    myFormat
+  ),
+  transports: [
+    new transports.File({ filename: 'lodapi-error.log' }),
+  ]
+});
+
+// If we're not in production then **ALSO** log to the `console`
+// with the colorized simple format.
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new transports.Console({
+    format: format.combine(
+      format.colorize(),
+      format.simple()
+    )
+  }));
+}
+
 class LodelSession {
   baseUrl: string;
   headers: IncomingHttpHeaders | undefined;
   logger = logger;
 
   constructor(baseUrl: string) {
-    logger.info(`Constructing LodelSession with URL: ${baseUrl}`);
     this.baseUrl = baseUrl;
   }
 
   auth({ login, password }: Credentials) {
-    logger.info(`Starting authentication`);
     const r = this.request({
       description: "auth",
       exec: "/lodel/edition/login.php",
@@ -134,7 +124,6 @@ class LodelSession {
     });
 
     return r.then(({ response, body }: RequestResult) => {
-      logger.info(`Authentication done`);
       this.headers = response.request.headers;
       return response;
     });
