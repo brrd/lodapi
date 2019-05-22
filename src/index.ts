@@ -326,7 +326,7 @@ class LodelSession {
 
     const submitNewForm = ({ response, body }: RequestResult) => {
       // Get form values
-      const form = parseForm(body);
+      const form = parseForm(body, "form#edit_ent");
       const formData = Object.assign({}, form, {
         do: "edit",
         id: docId,
@@ -508,7 +508,7 @@ class LodelSession {
     };
 
     const submitNewForm = ({ response, body }: RequestResult) => {
-      const form = parseForm(body);
+      const form = parseForm(body, "form#edit_ent");
       const formData = Object.assign({}, form);
       return this.request({
         description: "resubmitEntity(2)",
