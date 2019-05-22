@@ -74,18 +74,17 @@ const myFormat = printf(({ level, message, timestamp }) => {
 });
 
 const logger = createLogger({
-  level: 'error',
+  level: 'info',
   format: combine(
     timestamp(),
     myFormat
   ),
   transports: [
-    new transports.File({ filename: 'lodapi-error.log' }),
+    new transports.File({ filename: 'lodapi-error.log', level: 'error' }),
+    new transports.File({ filename: 'lodapi-combined.log' })
   ]
 });
 
-// If we're not in production then **ALSO** log to the `console`
-// with the colorized simple format.
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new transports.Console({
     format: format.combine(
@@ -101,10 +100,12 @@ class LodelSession {
   logger = logger;
 
   constructor(baseUrl: string) {
+    logger.info(`New LodelSession`);
     this.baseUrl = baseUrl;
   }
 
   auth({ login, password }: Credentials) {
+    logger.info(`Auth`);
     const r = this.request({
       description: "auth",
       exec: "/lodel/edition/login.php",
