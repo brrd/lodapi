@@ -6,6 +6,7 @@ import { parse } from "url";
 import urljoin = require("url-join");
 import { parseForm } from "./utils";
 import  { createLogger, format, transports } from "winston";
+import winston = require("winston");
 const { combine, timestamp, printf } = format;
 
 interface RequestOptions {
@@ -97,9 +98,10 @@ if (process.env.NODE_ENV !== 'production') {
 class LodelSession {
   baseUrl: string;
   headers: IncomingHttpHeaders | undefined;
-  logger = logger;
+  logger: winston.Logger
 
   constructor(baseUrl: string) {
+    this.logger = logger;
     logger.info(`New LodelSession`);
     this.baseUrl = baseUrl;
   }
