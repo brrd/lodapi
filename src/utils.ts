@@ -25,10 +25,6 @@ export function parseForm(body: any, parentSelector = "") {
       form[name] = value;
     }
   });
-
-  if (Object.keys(form).length === 0) {
-    throw Error(`Could not get values from form`);
-  }
   return form;
 };
 
