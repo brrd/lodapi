@@ -524,6 +524,8 @@ class LodelSession {
 
   // WARNING: this uses resubmitEntity so this can be unsafe
   mergePersons(idBase: number, idPersons: number[]) {
+    idPersons = idPersons.filter((id) => id !== idBase);
+    
     const updatePersonsData = (base: Entry) => {
       const data = base.data;
       const proms = idPersons.map((id) => {
