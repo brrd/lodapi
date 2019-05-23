@@ -459,6 +459,13 @@ class LodelSession {
     });
   }
 
+  editEntryType(id: number, type: number) {
+    logger.info(`editEntryType ${id}, ${type}`);
+    return this.editIndex(id, "entries", {
+      "idtype": type
+    });
+  }
+
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
     logger.info(`associateEntries : idEntities ${idEntities}, idEntries ${idEntries}, idType ${idType}`);
 

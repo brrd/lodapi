@@ -93,6 +93,10 @@ This method has two aliases: `deleteEntry(id: number)` and `deletePerson(id: num
 
 Set entry `id` name to `name`.
 
+### `editEntryType(id: number, type: number)`
+
+Move entry `id` to index `type` (it has to be within the same class).
+
 ### `associateEntries(idEntities: number[], idEntries: number[], idType?: number)`
 
 Connect entities with entries. 
