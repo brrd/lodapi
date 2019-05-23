@@ -428,7 +428,7 @@ class LodelSession {
 
       const formData = Object.assign({}, form, data);
       return this.request({
-        description: "editEntryName(2)",
+        description: "editIndex(2)",
         exec: `/lodel/admin/index.php`,
         method: "post",
         config: { formData }
@@ -451,6 +451,7 @@ class LodelSession {
   }
 
   editEntryName(id: number, name: string) {
+    logger.info(`editEntryName ${id}, ${name}`);
     return this.editIndex(id, "entries", {
       "data[nom]": name
     });
@@ -512,6 +513,7 @@ class LodelSession {
   }
 
   editPersonName(id: number, name?: string, familyName?: string) {
+    logger.info(`editPersonName ${id}, ${name}, ${familyName}`);
     const data: { [key: string]: string } = {};
     if (name) {
       data["data[prenom]"] = name;
@@ -563,6 +565,8 @@ class LodelSession {
   // WARNING: this uses resubmitEntity so this can be unsafe
   mergePersons(idBase: number, idPersons: number[]) {
     idPersons = idPersons.filter((id) => id !== idBase);
+
+    logger.info(`mergePersons ${idBase}, ${idPersons}`);
 
     const updatePersonsData = (base: Entry) => {
       const data = base.data;
