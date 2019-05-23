@@ -1,5 +1,5 @@
 {
-  "name": "loadapi",
+  "name": "lodapi",
   "version": "1.0.0-dev",
   "description": "API for Lodel",
   "main": "dist/index.js",
