@@ -439,6 +439,8 @@ class LodelSession {
   }
 
   deleteIndex(id: number, type: "entries" | "persons") {
+    logger.info(`deleteIndex ${id}`);
+
     return this.request({
       description: `deleteIndex(id:${id})`,
       exec: `/lodel/admin/index.php?do=delete&id=${id}&lo=${type}`,
@@ -458,6 +460,8 @@ class LodelSession {
   }
 
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
+    logger.info(`associateEntries : idEidEntities ${idEntities}, idEntries ${idEntries}, idType ${idType}`);
+
     // Create entries query string
     const getEntriesQuery = new Promise<string>((resolve, reject) => {
       if (idType) {
@@ -506,6 +510,30 @@ class LodelSession {
 
   deleteEntry(id: number) {
     return this.deleteIndex(id, "entries");
+  }
+
+  mergeEntries(idTargetEntry: number, idEntries: number[]) {
+    idEntries = idEntries.filter((id) => id !== idTargetEntry);
+
+    logger.info(`mergePersons : idTargetEntry ${idTargetEntry}, idEntries ${idEntries}`);
+    
+    // First associate each entity related with each idEntries to idTarget
+    const associateEntitiesAndDeleteEntries = (targetEntry: Entry) => {
+      const {idType} = targetEntry;
+      const proms = idEntries.map((id) => {
+        this.getEntry(id).then((entry) => {
+          const {relatedEntities} = entry;
+          return this.associateEntries(relatedEntities, [idTargetEntry], idType);
+        })
+        .then(() => {
+          this.deleteEntry(id);
+        });
+      });
+      return Promise.all(proms);
+    }
+
+    return this.getEntry(idTargetEntry)
+      .then(associateEntitiesAndDeleteEntries)
   }
 
   getPerson(id: number) {
