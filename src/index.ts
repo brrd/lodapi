@@ -460,7 +460,7 @@ class LodelSession {
   }
 
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
-    logger.info(`associateEntries : idEidEntities ${idEntities}, idEntries ${idEntries}, idType ${idType}`);
+    logger.info(`associateEntries : idEntities ${idEntities}, idEntries ${idEntries}, idType ${idType}`);
 
     // Create entries query string
     const getEntriesQuery = new Promise<string>((resolve, reject) => {
@@ -515,7 +515,7 @@ class LodelSession {
   mergeEntries(idTargetEntry: number, idEntries: number[]) {
     idEntries = idEntries.filter((id) => id !== idTargetEntry);
 
-    logger.info(`mergePersons : idTargetEntry ${idTargetEntry}, idEntries ${idEntries}`);
+    logger.info(`mergeEntries : idTargetEntry ${idTargetEntry}, idEntries ${idEntries}`);
     
     // First associate each entity related with each idEntries to idTarget
     const associateEntitiesAndDeleteEntries = (targetEntry: Entry) => {
