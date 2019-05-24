@@ -435,7 +435,18 @@ class LodelSession {
       });
     };
 
-    return getForm().then(submitNewForm);
+    const findErrors = ({ response, body }: RequestResult) => {
+      const $ = cheerio.load(body);
+      const errMsg = $("form.entry span.error").text();
+      if (errMsg) {
+        const err = Error(`editIndex ${id}: ${errMsg}`);
+        logger.error(err);
+        throw err;
+      }
+      return Promise.resolve({ response, body });
+    };
+
+    return getForm().then(submitNewForm).then(findErrors);
   }
 
   deleteIndex(id: number, type: "entries" | "persons") {
