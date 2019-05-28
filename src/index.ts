@@ -524,12 +524,14 @@ class LodelSession {
     })
     .catch((reason: any) => {      
       const msg = reason.toString().trim();
-      const uniquenessMsg = "Le champ doit être unique.";      
-      if (msg.indexOf(uniquenessMsg) === -1) throw reason;      
-    })
-    .then(getEntryName)
-    .then((name: string) => this.getEntryIdByName(name, type))
-    .then((targetId) => this.mergeEntries(targetId, [id]));
+      const uniquenessMsg = "Le champ doit être unique.";
+      if (msg.indexOf(uniquenessMsg) === -1) throw reason;
+      // Use mergeEntries when an entry with this name already exists in target index
+      return Promise.resolve()
+        .then(getEntryName)
+        .then((name: string) => this.getEntryIdByName(name, type))
+        .then((targetId) => this.mergeEntries(targetId, [id]));
+    });
   }
 
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
