@@ -596,7 +596,8 @@ class LodelSession {
     const associateEntitiesAndDeleteEntries = (targetEntry: Entry) => {
       const {idType} = targetEntry;
       const proms = idEntries.map((id) => {
-        this.getEntry(id).then((entry) => {
+        if (id === idTargetEntry) return;
+        return this.getEntry(id).then((entry) => {
           const {relatedEntities} = entry;
           return this.associateEntries(relatedEntities, [idTargetEntry], idType);
         })
