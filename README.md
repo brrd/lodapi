@@ -99,7 +99,7 @@ Set entry `id` name to `name`.
 
 ### `editEntryType(id: number, type: number)`
 
-Move entry `id` to index `type` (it has to be within the same class).
+Move entry `id` to index `type` (it has to be within the same class). If an entry with the same name already exists in the target index, then the entry `id` will be merged into it.
 
 ### `associateEntries(idEntities: number[], idEntries: number[], idType?: number)`
 

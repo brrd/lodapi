@@ -506,9 +506,30 @@ class LodelSession {
 
   editEntryType(id: number, type: number) {
     logger.info(`editEntryType ${id}, ${type}`);
+
+    const getEntryName = () => {
+      return this.getEntry(id).then((entry) => {
+        const name = entry.data["data[nom]"];
+        if (!name) {
+          const err = Error(`Could not find name of entry ${id}`);
+          logger.error(err);
+          throw err;
+        }
+        return name;
+      });
+    }
+
     return this.editIndex(id, "entries", {
       "idtype": type
-    });
+    })
+    .catch((reason: any) => {      
+      const msg = reason.toString().trim();
+      const uniquenessMsg = "Le champ doit être unique.";      
+      if (msg.indexOf(uniquenessMsg) === -1) throw reason;      
+    })
+    .then(getEntryName)
+    .then((name: string) => this.getEntryIdByName(name, type))
+    .then((targetId) => this.mergeEntries(targetId, [id]));
   }
 
   associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
