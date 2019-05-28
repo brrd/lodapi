@@ -89,6 +89,10 @@ Delete index `id` with type "entries" or "persons".
 
 This method has two aliases: `deleteEntry(id: number)` and `deletePerson(id: number)`.
 
+### `getEntryIdByName(name: string, idType: number)`
+
+Get the id of an entry from its name.
+
 ### `editEntryName(id: number, name: string)`
 
 Set entry `id` name to `name`.

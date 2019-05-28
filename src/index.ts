@@ -463,6 +463,40 @@ class LodelSession {
     return this.getIndex(id, "entries");
   }
 
+  getEntryIdByName(name: string, idType: number) {
+    name = name.trim();
+
+    const getEntries = () => {
+      return this.request({
+        description: `getEntryByName(name:${name})`,
+        exec: `/lodel/admin/index.php?do=list&lo=entries&idtype=${idType}&listall=1`,
+        method: "get"
+      });
+    }
+
+    const findEntryId = ({ response, body }: RequestResult) => {
+      const $ = cheerio.load(body);
+      let id;
+      $(".listEntities li").each(function(this: Cheerio) {
+        const title = $(this).find("span.titre_document").first().text();
+        if (title.trim() === name) {
+          const a = $(this).find(".action .item a").first();
+          const href = a.attr("href") || "";
+          id = (href.match(/\d+$/) || [])[0];
+          return false;
+        }
+      });
+      if (!id) {
+        const err = Error(`Could not find id from name ${name} (type ${idType})`);
+        logger.error(err);
+        throw err;
+      }
+      return id;
+    };
+
+    return getEntries().then(findEntryId);
+  }
+
   editEntryName(id: number, name: string) {
     logger.info(`editEntryName ${id}, ${name}`);
     return this.editIndex(id, "entries", {
