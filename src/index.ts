@@ -499,8 +499,31 @@ class LodelSession {
 
   editEntryName(id: number, name: string) {
     logger.info(`editEntryName ${id}, ${name}`);
+
+    const getEntryType = () => {
+      return this.getEntry(id).then((entry) => {
+        const type = entry.idType;
+        if (!type) {
+          const err = Error(`Could not find type of entry ${id}`);
+          logger.error(err);
+          throw err;
+        }
+        return type;
+      });
+    };
+
     return this.editIndex(id, "entries", {
       "data[nom]": name
+    })
+    .catch((reason: any) => {
+      const msg = reason.toString().trim();
+      const uniquenessMsg = "Le champ doit être unique.";
+      if (msg.indexOf(uniquenessMsg) === -1) throw reason;
+      // Use mergeEntries when an entry with this name already exists in target index
+      return Promise.resolve()
+        .then(getEntryType)
+        .then((type: number) => this.getEntryIdByName(name, type))
+        .then((targetId) => this.mergeEntries(targetId, [id]));
     });
   }
 
@@ -517,7 +540,7 @@ class LodelSession {
         }
         return name;
       });
-    }
+    };
 
     return this.editIndex(id, "entries", {
       "idtype": type
