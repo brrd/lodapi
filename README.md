@@ -139,6 +139,10 @@ Merge persons listed in `idPerson` in a person which will have the `idBase` data
 
 Merge entries listed in `idEntries` in the entry with the id `idTargetEntry`. It comes in very handy when cleaning the duplicates among entries.
 
+## Examples
+
+See `examples/` directory.
+
 ## MIT License
 
 Copyright (c) 2019 Thomas Brouard
