@@ -144,7 +144,7 @@ class LodelSession {
     return new Promise<RequestResult>(function (resolve, reject) {
       const callback = (err: Error, response: request.Response, body: any) => {
         if (!err && response.statusCode !== expectedStatusCode) {
-          err = Error(`[request: ${description}] Unexpected status code: ${response.statusCode}`);
+          err = Error(`[request: ${description}] Unexpected status code: ${response.statusCode} (URL: ${requestConfig.url})`);
         }
         if (err) {
           logger.error(err);
