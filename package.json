@@ -14,7 +14,7 @@
     "@types/node": "^11.11.6",
     "@types/request": "^2.48.1",
     "@types/url-join": "^4.0.0",
-    "typescript": "^3.3.3333"
+    "typescript": "^4.5.5"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.10",
