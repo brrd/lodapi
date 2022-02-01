@@ -19,18 +19,18 @@ interface RequestOptions {
 }
 
 interface RequestResult {
-  response: request.Response, 
+  response: request.Response,
   body: any
 }
 
-interface Credentials { 
-  login: string, 
-  password: string 
+interface Credentials {
+  login: string,
+  password: string
 }
 
 interface PublicationOptions {
-  idParent: number, 
-  idType: number, 
+  idParent: number,
+  idType: number,
   title?: string
 }
 
@@ -167,13 +167,13 @@ class LodelSession {
       const availableTypes = ((body) => {
         const $ = cheerio.load(body);
         const types: EntityType[] = [];
-        $("#addEntity select option").each(function (this: Cheerio) {
+        $("#addEntity select option").each(function (this: cheerio.Element) {
           const value = $(this).attr("value");
           if (value == null) return;
           const id = (value.match(/\d+$/) || [])[0];
           if (id == null) return;
           const name = $(this).text().trim();
-          return types.push({ name, id: Number(id) });
+          types.push({ name, id: Number(id) });
         });
         return types;
       })(body);
@@ -362,7 +362,7 @@ class LodelSession {
         config: { formData }
       });
     };
-    
+
     // Main
     return getForm().then(submitNewForm);
   }
@@ -385,8 +385,8 @@ class LodelSession {
       }
 
       const relatedEntities: number[] = [];
-      $(".listEntities li").each(function (this: Cheerio) {
-        const href = $(this).find(".action .move + .item a").eq(0).attr("href");
+      $(".listEntities li").each(function (this: cheerio.Element) {
+        const href = $(this).find(".action .move + .item a").eq(0).attr("href") || "";
         const match = (href.match(/\d+$/) || [])[0];
         if (match.length > 0) {
           const id = Number(match);
@@ -399,10 +399,10 @@ class LodelSession {
       });
 
       const data: { [key: string]: string } = {};
-      $("form.entry input[name^='data']").each(function (this: Cheerio) {
+      $("form.entry input[name^='data']").each(function (this: cheerio.Element) {
         const name = $(this).attr("name");
-        const value = $(this).attr("value");
-        data[name] = value;
+        const value = $(this).attr("value") || "";
+        data[name!] = value;
       });
       return { id, idType, relatedEntities, data };
     });
@@ -477,7 +477,7 @@ class LodelSession {
     const findEntryId = ({ response, body }: RequestResult) => {
       const $ = cheerio.load(body);
       let id;
-      $(".listEntities li").each(function(this: Cheerio) {
+      $(".listEntities li").each(function(this: cheerio.Element) {
         const title = $(this).find("span.titre_document").first().text();
         if (title.trim() === name) {
           const a = $(this).find(".action .item a").first();
@@ -545,7 +545,7 @@ class LodelSession {
     return this.editIndex(id, "entries", {
       "idtype": type
     })
-    .catch((reason: any) => {      
+    .catch((reason: any) => {
       const msg = reason.toString().trim();
       const uniquenessMsg = "Le champ doit être unique.";
       if (msg.indexOf(uniquenessMsg) === -1) throw reason;
@@ -566,7 +566,7 @@ class LodelSession {
         const entriesQuery = idEntries.reduce((query: string, idEntry: number, i: number) => `${query}&identries[${i}]=${idEntry}_${idType}`, "");
         return resolve(entriesQuery);
       }
-      
+
       // Get idTypes for each entry if a global idType was not defined
       const getEntriesPromises = idEntries.map((id) => this.getEntry(id));
       return Promise.all(getEntriesPromises)
@@ -614,7 +614,7 @@ class LodelSession {
     idEntries = idEntries.filter((id) => id !== idTargetEntry);
 
     logger.info(`mergeEntries : idTargetEntry ${idTargetEntry}, idEntries ${idEntries}`);
-    
+
     // First associate each entity related with each idEntries to idTarget
     const associateEntitiesAndDeleteEntries = (targetEntry: Entry) => {
       const {idType} = targetEntry;

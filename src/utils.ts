@@ -1,14 +1,14 @@
 import * as cheerio from "cheerio";
 
-export function parseForm(body: any, parentSelector = "") {
+export function parseForm(body: any, parentSelector:string = "") {
   // Get form values
   const $ = cheerio.load(body);
-  const form: { [key: string]: string } = {};
+  const form: { [key: string]: string | string[] } = {};
 
-  $(`${parentSelector} [name]`).each(function (this: Cheerio) {
+  $(`${parentSelector} [name]`).each(function (this: cheerio.Node) {
     const type = $(this).attr("type");
-    if (["button", "submit"].includes(type)) return;
-    const name = $(this).attr("name");
+    if (type && ["button", "submit"].includes(type)) return;
+    const name = $(this).attr("name") || "";
     let value = type === "checkbox" ? $(this).attr("checked") : $(this).val();
     if (value == null) return;
 
@@ -16,9 +16,9 @@ export function parseForm(body: any, parentSelector = "") {
     if (name.match(/^pool_candidats_/) != null) {
       const $prev = $(this).prev("input");
       if ($prev.length === 0) {
-        return new Error(`Can't get ${name} value`);
+        throw Error(`Can't get ${name} value`);
       }
-      const prevName = $prev.attr("name");
+      const prevName = $prev.attr("name") || "";
       value = Array.isArray(value) ? value.join(",") : value;
       form[prevName] = value;
     } else {
