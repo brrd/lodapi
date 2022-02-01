@@ -17,6 +17,7 @@
     "typescript": "^3.3.3333"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
     "request": "^2.88.0",
     "url-join": "^4.0.0",
     "winston": "^3.2.1"
