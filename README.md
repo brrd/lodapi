@@ -52,6 +52,10 @@ Create a new publication with type `idType` in parent `idParent`. `title` parame
 
 List possible types for children of `idParent`.
 
+### `getChildren(idParent: number)`
+
+List children entities of `idParent`.
+
 ### `uploadDoc({ filepath: string, idParent: string, idType: string })`
 
 Upload a document (using OTX) located at `filepath` in publication `idParent` with type `idType`.
@@ -103,7 +107,7 @@ Move entry `id` to index `type` (it has to be within the same class). If an entr
 
 ### `associateEntries(idEntities: number[], idEntries: number[], idType?: number)`
 
-Connect entities with entries. 
+Connect entities with entries.
 
 If `idType` is declared then it will be used as `idtype` for all entries. Otherwise the script will run `getEntry()` on each individual entry in order to find its type (= additionnal requests).
 

@@ -34,6 +34,13 @@ interface PublicationOptions {
   title?: string
 }
 
+interface Entity {
+  idParent: number,
+  id: number,
+  type: string,
+  title: string
+}
+
 interface EntityType {
   name: string,
   id: number
@@ -184,6 +191,27 @@ class LodelSession {
         throw err;
       }
       return availableTypes;
+    });
+  }
+
+  getChildren(idParent: number) {
+    const r = this.request({
+      description: "getAvailableTypes",
+      exec: `/lodel/edition/index.php?id=${idParent}`,
+      method: "get"
+    });
+
+    return r.then(({ response, body }: RequestResult) => {
+      const $ = cheerio.load(body);
+      const entities: Entity[] = [];
+      $("#listEntities li").each(function (this: cheerio.Element) {
+        const id = parseInt(($(this).attr("id") || "").replace(/.*_(\d+)$/, "$1"), 10);
+        const type = $(this).find(".type_document").text().replace(/\((.*)\)/, "$1");
+        const title = $(this).find(".titre_document a").text().trim();
+        const entity = { idParent, id, type, title };
+        entities.push(entity);
+      });
+      return entities;
     });
   }
 
