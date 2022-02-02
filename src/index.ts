@@ -252,7 +252,7 @@ class LodelSession {
         logger.error(err);
         throw err;
       }
-      return publiId;
+      return parseInt(publiId, 10);
     });
   }
 
