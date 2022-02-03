@@ -14,7 +14,7 @@ interface RequestOptions {
   exec: string,
   method: "post" | "get",
   config?: {},
-  expectedStatusCode?: number,
+  expectedStatusCode?: number | boolean,
   isAuth?: boolean
 }
 
@@ -150,7 +150,7 @@ class LodelSession {
 
     return new Promise<RequestResult>(function (resolve, reject) {
       const callback = (err: Error, response: request.Response, body: any) => {
-        if (!err && response.statusCode !== expectedStatusCode) {
+        if (!err && expectedStatusCode && response.statusCode !== expectedStatusCode) {
           err = Error(`[request: ${description}] Unexpected status code: ${response.statusCode} (URL: ${requestConfig.url})`);
         }
         if (err) {
@@ -752,6 +752,23 @@ class LodelSession {
       .then(updatePersonsData)
       .then(getRelatedEntities)
       .then(resubmitEntities);
+  }
+
+  restoreBackup(file: string) {
+    const checkResult = ({ response, body }: RequestResult) => {
+      if (!body.includes("Importation des données réussie")) {
+        const err = Error(`Could not find restoreBackup success message (${file})`);
+        logger.error(err);
+        throw err;
+      }
+    };
+
+    return this.request({
+      description: "restoreBackup",
+      exec: `/lodel/admin/index.php?do=import&lo=data&file=${file}`,
+      method: "get",
+      expectedStatusCode: false // don't check status code, it's working anyway
+    }).then(checkResult);
   }
 }
 
