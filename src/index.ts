@@ -2,7 +2,7 @@ import * as cheerio from "cheerio";
 import { createReadStream } from "fs";
 import { IncomingMessage, IncomingHttpHeaders } from "http";
 import * as request from "request";
-import { parse } from "url";
+import { URL } from "url";
 import urljoin = require("url-join");
 import { parseForm } from "./utils";
 import  { createLogger, format, transports } from "winston";
@@ -127,7 +127,7 @@ class LodelSession {
         form: {
           login: login,
           passwd: password,
-          url_retour: parse(this.baseUrl).pathname
+          url_retour: new URL(this.baseUrl).pathname
         },
         jar: true
       },

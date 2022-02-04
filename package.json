@@ -1,6 +1,6 @@
 {
   "name": "lodapi",
-  "version": "1.1.0",
+  "version": "1.2.0-dev",
   "description": "API for Lodel",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
