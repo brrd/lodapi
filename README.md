@@ -23,7 +23,8 @@ npm run build
 const LodelSession = require("lodapi");
 
 // Instanciate the class
-const session = new LodelSession("https://url-to-lodel-website.com");
+const concurrency = 1; // default: Infinity
+const session = new LodelSession("https://url-to-lodel-website.com", concurrency);
 
 // First of all authenticate
 session.auth({ login: "user", password: "pwd" })
@@ -43,6 +44,10 @@ Methods which submit data using the Lodel entity form can cause data loss depend
 ### `auth({login: string, password: string})`
 
 Authenticate in Lodel. See "Usage" on top.
+
+### `setConcurrency(concurrency: number)`
+
+Set request `concurrency` setting.
 
 ### `createPublication({ idParent: number, idType: number, title?: string})`
 
