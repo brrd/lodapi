@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { createReadStream } from "fs";
 import { IncomingMessage, IncomingHttpHeaders } from "http";
+import pLimit from "p-limit";
 import * as request from "request";
 import { URL } from "url";
 import urljoin = require("url-join");
@@ -67,7 +68,7 @@ interface Entry {
   id: number,
   idType: number;
   relatedEntities?: number[],
-  data?: { [key: string]: string }
+  data: { [key: string]: string }
 }
 
 const htpasswd = {
@@ -104,13 +105,21 @@ if (process.env.NODE_ENV !== 'production') {
 
 class LodelSession {
   baseUrl: string;
+  concurrency!: number;
   headers: IncomingHttpHeaders | undefined;
-  logger: winston.Logger
+  limit!: Function;
+  logger: winston.Logger;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, concurrency = Infinity) {
     this.logger = logger;
     logger.info(`New LodelSession`);
     this.baseUrl = baseUrl;
+    this.setConcurrency(concurrency);
+  }
+
+  setConcurrency(concurrency: number) {
+    this.concurrency = concurrency;
+    this.limit = pLimit(concurrency)
   }
 
   auth({ login, password }: Credentials) {
@@ -148,7 +157,7 @@ class LodelSession {
       headers: this.headers
     }, config);
 
-    return new Promise<RequestResult>(function (resolve, reject) {
+    const p = new Promise<RequestResult>(function (resolve, reject) {
       const callback = (err: Error, response: request.Response, body: any) => {
         if (!err && expectedStatusCode && response.statusCode !== expectedStatusCode) {
           err = Error(`[request: ${description}] Unexpected status code: ${response.statusCode} (URL: ${requestConfig.url})`);
@@ -161,6 +170,8 @@ class LodelSession {
       };
       request[method](requestConfig, callback);
     });
+
+    return this.limit(() => p);
   }
 
   getAvailableTypes(idParent: number) {
@@ -395,7 +406,7 @@ class LodelSession {
     return getForm().then(submitNewForm);
   }
 
-  getIndex(id: number, type: "entries" | "persons") {
+  getIndex(id: number, type: "entries" | "persons"): Promise<Entry> {
     const r = this.request({
       description: `getIndex(id:${id})`,
       exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${type}`,
@@ -487,7 +498,7 @@ class LodelSession {
     });
   }
 
-  getEntry (id: number) {
+  getEntry(id: number) {
     return this.getIndex(id, "entries");
   }
 
@@ -629,7 +640,7 @@ class LodelSession {
     };
 
     if (idType) {
-      return dissociate({id: idEntry, idType});
+      return dissociate({id: idEntry, idType, data: {}});
     }
     return this.getEntry(idEntry).then(dissociate);
   }
@@ -649,7 +660,7 @@ class LodelSession {
       const proms = idEntries.map((id) => {
         if (id === idTargetEntry) return;
         return this.getEntry(id).then((entry) => {
-          const {relatedEntities} = entry;
+          const relatedEntities = entry.relatedEntities || [];
           return this.associateEntries(relatedEntities, [idTargetEntry], idType);
         })
         .then(() => {
@@ -736,7 +747,7 @@ class LodelSession {
       const proms = all.map((id) => this.getPerson(id));
       return Promise.all(proms).then((persons) => {
         const relatedEntities = persons.reduce((arr: number[], person) => {
-          return arr.concat(person.relatedEntities);
+          return arr.concat(person.relatedEntities || []);
         }, []);
         const uniques = Array.from(new Set(relatedEntities));
         return uniques;
