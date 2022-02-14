@@ -273,7 +273,7 @@ class LodelSession {
   }
 
   createPublication(options: EntityOptions) {
-    return this.createEntity(options, { titre: "New Publication", datepubli: "today" })
+    return this.createEntity(options, { titre: "New Publication", datepubli: "today" });
   }
 
   uploadDoc({ filepath, idParent, idType }: Doc) {
