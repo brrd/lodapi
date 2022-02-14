@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import { createReadStream } from "fs";
 import { IncomingMessage, IncomingHttpHeaders } from "http";
-import pLimit from "p-limit";
+import PQueue from "p-queue";
 import * as request from "request";
 import { URL } from "url";
 import urljoin = require("url-join");
@@ -107,7 +107,7 @@ class LodelSession {
   baseUrl: string;
   concurrency!: number;
   headers: IncomingHttpHeaders | undefined;
-  limit!: Function;
+  queue!: PQueue;
   logger: winston.Logger;
 
   constructor(baseUrl: string, concurrency = Infinity) {
@@ -119,7 +119,7 @@ class LodelSession {
 
   setConcurrency(concurrency: number) {
     this.concurrency = concurrency;
-    this.limit = pLimit(concurrency)
+    this.queue = new PQueue({concurrency});
   }
 
   auth({ login, password }: Credentials) {
@@ -157,7 +157,7 @@ class LodelSession {
       headers: this.headers
     }, config);
 
-    const p = new Promise<RequestResult>(function (resolve, reject) {
+    const runRequest = () => new Promise<RequestResult>(function (resolve, reject) {
       const callback = (err: Error, response: request.Response, body: any) => {
         if (!err && expectedStatusCode && response.statusCode !== expectedStatusCode) {
           err = Error(`[request: ${description}] Unexpected status code: ${response.statusCode} (URL: ${requestConfig.url})`);
@@ -171,7 +171,7 @@ class LodelSession {
       request[method](requestConfig, callback);
     });
 
-    return this.limit(() => p);
+    return this.queue.add(runRequest);
   }
 
   getAvailableTypes(idParent: number) {
