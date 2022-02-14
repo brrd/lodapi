@@ -32,7 +32,7 @@ interface Credentials {
 interface PublicationOptions {
   idParent: number,
   idType: number,
-  title?: string
+  data: { [key: string]: string }
 }
 
 interface Entity {
@@ -226,7 +226,28 @@ class LodelSession {
     });
   }
 
-  createPublication({ idParent, idType, title = "New publication" }: PublicationOptions) {
+  createPublication({ idParent, idType, data = {} }: PublicationOptions) {
+    const formDefault = {
+      do: "edit",
+      id: 0,
+      timestamp: Date.now(),
+      idparent: idParent,
+      idtype: idType,
+      creationmethod: "form",
+      edit: 1,
+      "data[titre]": "New Publication",
+      "data[datepubli]": "today",
+      creationinfo: "xhtml",
+      visualiserdocument: true
+    };
+
+    const formData = Object.keys(data).reduce((res: { [key: string]: string }, key) => {
+      res[`data[${key}]`] = data[key];
+      return res;
+    }, {});
+
+    const form = Object.assign(formDefault, formData);
+
     const r = this.request({
       description: "createPublication",
       exec: "/lodel/edition/index.php",
@@ -234,19 +255,7 @@ class LodelSession {
       expectedStatusCode: 302, // Avoid redirections
       config: {
         followAllRedirects: false,
-        form: {
-          do: "edit",
-          id: 0,
-          timestamp: Date.now(),
-          idparent: idParent,
-          idtype: idType,
-          creationmethod: "form",
-          edit: 1,
-          "data[titre]": title,
-          "data[datepubli]": "today",
-          creationinfo: "xhtml",
-          visualiserdocument: true
-        }
+        form
       }
     });
 
@@ -259,7 +268,7 @@ class LodelSession {
       };
       const publiId = getPubliId((response));
       if (publiId == null) {
-        const err = Error(`Can't get id of publication '${title}'`);
+        const err = Error(`Can't get id of created publication`);
         logger.error(err);
         throw err;
       }

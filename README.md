@@ -49,9 +49,9 @@ Authenticate in Lodel. See "Usage" on top.
 
 Set request `concurrency` setting.
 
-### `createPublication({ idParent: number, idType: number, title?: string})`
+### `createPublication({ idParent: number, idType: number, data: {}})`
 
-Create a new publication with type `idType` in parent `idParent`. `title` parameter is optional (default = "New publication").
+Create a new publication with type `idType` in parent `idParent`. `data` parameter contains the data sent in the form.
 
 ### `getAvailableTypes(idParent: number)`
 
