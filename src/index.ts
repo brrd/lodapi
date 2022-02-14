@@ -29,7 +29,7 @@ interface Credentials {
   password: string
 }
 
-interface PublicationOptions {
+interface EntityOptions {
   idParent: number,
   idType: number,
   data: { [key: string]: string }
@@ -226,8 +226,8 @@ class LodelSession {
     });
   }
 
-  createPublication({ idParent, idType, data = {} }: PublicationOptions) {
-    const formDefault = {
+  createEntity({ idParent, idType, data = {} }: EntityOptions, defaultData = {}) {
+    const form: { [key: string]: any } = {
       do: "edit",
       id: 0,
       timestamp: Date.now(),
@@ -235,21 +235,17 @@ class LodelSession {
       idtype: idType,
       creationmethod: "form",
       edit: 1,
-      "data[titre]": "New Publication",
-      "data[datepubli]": "today",
       creationinfo: "xhtml",
       visualiserdocument: true
     };
 
-    const formData = Object.keys(data).reduce((res: { [key: string]: string }, key) => {
-      res[`data[${key}]`] = data[key];
-      return res;
-    }, {});
-
-    const form = Object.assign(formDefault, formData);
+    const fullData = Object.assign({}, defaultData, data);
+    Object.keys(fullData).forEach((key) => {
+      form[`data[${key}]`] = fullData[key];
+    });
 
     const r = this.request({
-      description: "createPublication",
+      description: "createEntity",
       exec: "/lodel/edition/index.php",
       method: "post",
       expectedStatusCode: 302, // Avoid redirections
@@ -260,20 +256,24 @@ class LodelSession {
     });
 
     return r.then(({ response, body }: RequestResult) => {
-      const getPubliId = (response: IncomingMessage) => {
+      const getEntityId = (response: IncomingMessage) => {
         const location = response && response.headers && response.headers.location;
         if (location == null) return null;
         const match = location.match(/\d+$/);
         return match ? match[0] : null;
       };
-      const publiId = getPubliId((response));
-      if (publiId == null) {
-        const err = Error(`Can't get id of created publication`);
+      const entityId = getEntityId((response));
+      if (entityId == null) {
+        const err = Error(`Can't get id of created entity`);
         logger.error(err);
         throw err;
       }
-      return parseInt(publiId, 10);
+      return parseInt(entityId, 10);
     });
+  }
+
+  createPublication(options: EntityOptions) {
+    return this.createEntity(options, { titre: "New Publication", datepubli: "today" })
   }
 
   uploadDoc({ filepath, idParent, idType }: Doc) {

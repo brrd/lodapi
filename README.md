@@ -49,7 +49,13 @@ Authenticate in Lodel. See "Usage" on top.
 
 Set request `concurrency` setting.
 
+### `createEntity({ idParent: number, idType: number, data: {} }, defaultData: {})`
+
+Create a new entity with type `idType` in parent `idParent`. `data` parameter contains the data sent in the form.
+
 ### `createPublication({ idParent: number, idType: number, data: {}})`
+
+Alias to `createEntity()`.
 
 Create a new publication with type `idType` in parent `idParent`. `data` parameter contains the data sent in the form.
 
