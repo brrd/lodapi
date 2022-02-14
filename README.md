@@ -6,13 +6,13 @@ Note: The implementation of this toolbox is done according to my personal needs 
 
 ## Installation
 
-```
+```bash
 npm i lodapi
 ```
 
 or clone this repo and run:
 
-```
+```bash
 npm install
 npm run build
 ```
@@ -70,8 +70,6 @@ Upload a document (using OTX) located at `filepath` in publication `idParent` wi
 **WARNING: this feature is still experimental and can potentially cause data loss.**
 
 Upload a PDF located a `filepath` as `docId` alterfichier.
-
-
 
 ### `getIndex(id: number, type: "entries" | "persons")`
 
@@ -160,5 +158,4 @@ See `examples/` directory.
 
 ## MIT License
 
-Copyright (c) 2019 Thomas Brouard
-
+Copyright (c) 2022 Thomas Brouard
