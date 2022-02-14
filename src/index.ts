@@ -323,6 +323,7 @@ class LodelSession {
         description: "uploadDoc.getStatus",
         exec: `/lodel/edition/checkimport.php?idtask=${taskId}&reload=0`,
         method: "get",
+        expectedStatusCode: false,
         config: {
           followAllRedirects: false,
         }
