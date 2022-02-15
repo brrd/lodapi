@@ -13,6 +13,7 @@ const { combine, timestamp, printf } = format;
 interface RequestOptions {
   description: string,
   exec: string,
+  baseUrl?: string,
   method: "post" | "get",
   config?: {},
   expectedStatusCode?: number | boolean,
@@ -149,11 +150,11 @@ class LodelSession {
     });
   }
 
-  request({ description, exec, method, config = {}, expectedStatusCode = 200, isAuth = false }: RequestOptions) {
+  request({ description, baseUrl = this.baseUrl, exec, method, config = {}, expectedStatusCode = 200, isAuth = false }: RequestOptions) {
     if (!isAuth && this.headers == null) return Promise.reject(`[request: ${description}] Session headers is undefined. Please make sure auth() was called first.`);
 
     const requestConfig = Object.assign({}, {
-      url: urljoin(this.baseUrl, exec),
+      url: urljoin(baseUrl, exec),
       followAllRedirects: true,
       headers: this.headers
     }, config);
@@ -806,6 +807,21 @@ class LodelSession {
       method: "get",
       expectedStatusCode: false // don't check status code, it's working anyway
     }).then(checkResult);
+  }
+
+  sortEntities(sitename: string, list: number[]) {
+    return this.request({
+      description: "sortEntities",
+      baseUrl: new URL(this.baseUrl).origin,
+      exec: "share/ajax/dragndrop.php",
+      method: "post",
+      config: {
+        formData: {
+          tabids: list.map((id) => "container_" + id).join(","),
+          site: sitename
+        }
+      }
+    })
   }
 }
 

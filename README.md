@@ -158,6 +158,10 @@ Restore a backup. `file` is the path to the backup archive on the host.
 
 **WARNING: initial data will be lost after this.**
 
+### `sortEntities(sitename: string, list: number[])`
+
+Sort entities according to `list` of ids. `sitename`, which is the name of the site in Lodel database, is required.
+
 ## Examples
 
 See `examples/` directory.
