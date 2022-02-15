@@ -348,10 +348,16 @@ class LodelSession {
 
     // 3. Validate OTX task
     const validateTask = ({ taskId, status }: OtxTask) => {
+      let redirectCount = 0;
       const r = this.request({
         description: "uploadDoc.validateTask",
         exec: `/lodel/edition/index.php?do=import&idtask=${taskId}&finish=oui&visualiserdocument=oui&reload=`,
-        method: "post"
+        method: "post",
+        expectedStatusCode: false,
+        config: {
+          // Follow only the first redirect
+          followRedirect: (res: request.Response) => redirectCount++ === 0,
+        }
       });
 
       return r.then(({ response, body }: RequestResult) => {
