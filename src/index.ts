@@ -32,7 +32,8 @@ interface Credentials {
 interface EntityOptions {
   idParent: number,
   idType: number,
-  data: { [key: string]: string }
+  data: { [key: string]: string },
+  entries: { [key: string]: string }
 }
 
 interface Entity {
@@ -226,7 +227,7 @@ class LodelSession {
     });
   }
 
-  createEntity({ idParent, idType, data = {} }: EntityOptions, defaultData = {}) {
+  createEntity({ idParent, idType, data = {}, entries = {} }: EntityOptions, defaultData = {}) {
     const form: { [key: string]: any } = {
       do: "edit",
       id: 0,
@@ -242,6 +243,9 @@ class LodelSession {
     const fullData = Object.assign({}, defaultData, data);
     Object.keys(fullData).forEach((key) => {
       form[`data[${key}]`] = fullData[key];
+    });
+    Object.keys(entries).forEach((key) => {
+      form[`entries[${key}]`] = entries[key];
     });
 
     const r = this.request({
