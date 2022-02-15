@@ -248,7 +248,7 @@ class LodelSession {
       description: "createEntity",
       exec: "/lodel/edition/index.php",
       method: "post",
-      expectedStatusCode: 302, // Avoid redirections
+      expectedStatusCode: false,
       config: {
         followAllRedirects: false,
         form
@@ -264,7 +264,13 @@ class LodelSession {
       };
       const entityId = getEntityId((response));
       if (entityId == null) {
-        const err = Error(`Can't get id of created entity`);
+        const lodelError = ((body) => {
+          const $ = cheerio.load(body);
+          const text = $("#editEntities > .error").text();
+          if (!text) return null;
+          return "(" + text.replace(/(\n|\s)+/g, " ") + ")";
+        })(body);
+        const err = Error(`Can't get id of created entity ${lodelError}`);
         logger.error(err);
         throw err;
       }
