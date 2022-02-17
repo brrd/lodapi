@@ -23,8 +23,11 @@ npm run build
 const LodelSession = require("lodapi");
 
 // Instanciate the class
-const concurrency = 1; // default: Infinity
-const session = new LodelSession("https://url-to-lodel-website.com", concurrency);
+const options = {
+  concurrency: 2, // Default: Infinity
+  timeout: 10000 // Default: 30000
+};
+const session = new LodelSession("https://url-to-lodel-website.com", options);
 
 // First of all authenticate
 session.auth({ login: "user", password: "pwd" })

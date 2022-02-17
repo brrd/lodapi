@@ -108,15 +108,17 @@ if (process.env.NODE_ENV !== 'production') {
 class LodelSession {
   baseUrl: string;
   concurrency!: number;
+  timeout: number;
   headers: IncomingHttpHeaders | undefined;
   queue!: PQueue;
   logger: winston.Logger;
 
-  constructor(baseUrl: string, concurrency = Infinity) {
+  constructor(baseUrl: string, { concurrency = Infinity, timeout = 30000 }) {
     this.logger = logger;
     logger.info(`New LodelSession`);
     this.baseUrl = baseUrl;
     this.setConcurrency(concurrency);
+    this.timeout = timeout;
   }
 
   setConcurrency(concurrency: number) {
@@ -156,7 +158,8 @@ class LodelSession {
     const requestConfig = Object.assign({}, {
       url: urljoin(baseUrl, exec),
       followAllRedirects: true,
-      headers: this.headers
+      headers: this.headers,
+      timeout: this.timeout
     }, config);
 
     const runRequest = () => new Promise<RequestResult>(function (resolve, reject) {
