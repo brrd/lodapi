@@ -17,7 +17,8 @@ interface RequestOptions {
   method: "post" | "get",
   config?: {},
   expectedStatusCode?: number | boolean,
-  isAuth?: boolean
+  isAuth?: boolean,
+  priority?: number
 }
 
 interface RequestResult {
@@ -152,7 +153,7 @@ class LodelSession {
     });
   }
 
-  request({ description, baseUrl = this.baseUrl, exec, method, config = {}, expectedStatusCode = 200, isAuth = false }: RequestOptions) {
+  request({ description, baseUrl = this.baseUrl, exec, method, config = {}, expectedStatusCode = 200, isAuth = false, priority = 0 }: RequestOptions) {
     if (!isAuth && this.headers == null) return Promise.reject(`[request: ${description}] Session headers is undefined. Please make sure auth() was called first.`);
 
     const requestConfig = Object.assign({}, {
@@ -176,7 +177,7 @@ class LodelSession {
       request[method](requestConfig, callback);
     });
 
-    return this.queue.add(runRequest);
+    return this.queue.add(runRequest, { priority });
   }
 
   getAvailableTypes(idParent: number) {
@@ -297,6 +298,7 @@ class LodelSession {
         description: "uploadDoc.submitUpload",
         exec: `/lodel/edition/oochargement.php?idparent=${idParent}&idtype=${idType}`,
         method: "post",
+        priority: 0,
         config: {
           formData: {
             idparent: idParent,
@@ -338,6 +340,7 @@ class LodelSession {
         exec: `/lodel/edition/checkimport.php?idtask=${taskId}&reload=0`,
         method: "get",
         expectedStatusCode: false,
+        priority: 1,
         config: {
           followAllRedirects: false,
         }
@@ -368,6 +371,7 @@ class LodelSession {
         exec: `/lodel/edition/index.php?do=import&idtask=${taskId}&finish=oui&visualiserdocument=oui&reload=`,
         method: "post",
         expectedStatusCode: false,
+        priority: 3,
         config: {
           // Follow only the first redirect
           followRedirect: (res: request.Response) => redirectCount++ === 0,
@@ -405,7 +409,8 @@ class LodelSession {
       return this.request({
         description: "uploadPdf(1)",
         exec: `/lodel/edition/index.php?do=view&id=${docId}`,
-        method: "get"
+        method: "get",
+        priority: 0
       });
     };
 
@@ -428,6 +433,7 @@ class LodelSession {
         description: "uploadPdf(2)",
         exec: `/lodel/edition/index.php?do=view&id=${docId}`,
         method: "post",
+        priority: 1,
         config: { formData }
       });
     };
@@ -483,7 +489,8 @@ class LodelSession {
       return this.request({
         description: `editIndex(id:${id})`,
         exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${type}`,
-        method: "get"
+        method: "get",
+        priority: 0
       });
     };
 
@@ -500,6 +507,7 @@ class LodelSession {
         description: "editIndex(2)",
         exec: `/lodel/admin/index.php`,
         method: "post",
+        priority: 1,
         config: { formData }
       });
     };
