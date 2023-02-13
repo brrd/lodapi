@@ -462,7 +462,7 @@ class LodelSession {
       const relatedEntities: number[] = [];
       $(".listEntities li").each(function (this: cheerio.Element) {
         const href = $(this).find(".action .move + .item a").eq(0).attr("href") || "";
-        const match = (href.match(/\d+$/) || [])[0];
+        const match = (href.match(/\d+$/) || [])[0] || "";
         if (match.length > 0) {
           const id = Number(match);
           relatedEntities.push(id);
