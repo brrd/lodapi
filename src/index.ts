@@ -74,6 +74,11 @@ interface Entry {
   data: { [key: string]: string }
 }
 
+const defaults = {
+  concurrency: Infinity,
+  timeout: 30000
+};
+
 const htpasswd = {
   user: "lodel",
   pass: "lodel",
@@ -114,7 +119,7 @@ class LodelSession {
   queue!: PQueue;
   logger: winston.Logger;
 
-  constructor(baseUrl: string, { concurrency = Infinity, timeout = 30000 }) {
+  constructor(baseUrl: string, { concurrency = defaults.concurrency, timeout = defaults.timeout } = defaults) {
     this.logger = logger;
     logger.info(`New LodelSession`);
     this.baseUrl = baseUrl;
