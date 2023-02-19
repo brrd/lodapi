@@ -825,6 +825,22 @@ class LodelSession {
       }
     })
   }
+
+  async getClasses(classType: "entities" | "entries" | "persons") {
+    const { response, body } = await this.request({
+      description: "getClasses",
+      exec: `/lodel/admin/index.php?do=list&lo=classes&classtype=${classType}`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+    const classes: String[] = [];
+    $("table.statistics tr:not(:first-child) td:first-of-type").each(function (this: cheerio.Element) {
+      const classname = $(this).text();
+      classes.push(classname);
+    });
+    return classes;
+  }
 }
 
 module.exports = LodelSession;

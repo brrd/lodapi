@@ -100,6 +100,9 @@ const site = {
     // output = await session.restoreBackup(site.string.backupPath);
     // console.log("restoreBackup", output);
 
+    output = await session.getClasses("entities");
+    console.log("getClasses", output);
+
   } catch (e) {
     console.error(e);
   }
