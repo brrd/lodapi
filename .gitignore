@@ -88,3 +88,6 @@ typings/
 
 # Dist
 dist/
+
+# Example credentials
+examples/private/auth.js
