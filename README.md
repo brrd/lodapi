@@ -176,6 +176,10 @@ Sort entities according to `list` of ids. `sitename`, which is the name of the s
 
 List classes defined in editorial model.
 
+### `getTypes(classType: "entities" | "entries" | "persons", classname: string)`
+
+List available types for an entity, entry or person class.
+
 ## Examples
 
 See `examples/` directory.

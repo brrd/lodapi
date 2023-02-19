@@ -103,6 +103,9 @@ const site = {
     output = await session.getClasses("entities");
     console.log("getClasses", output);
 
+    output = await session.getTypes("entities", "publications");
+    console.log("getTypes");
+
   } catch (e) {
     console.error(e);
   }

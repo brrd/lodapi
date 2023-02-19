@@ -74,6 +74,13 @@ interface Entry {
   data: { [key: string]: string }
 }
 
+interface Type {
+  type: string,
+  class: string,
+  id: number,
+  data?: { [key: string]: string }
+}
+
 const defaults = {
   concurrency: Infinity,
   timeout: 30000
@@ -840,6 +847,34 @@ class LodelSession {
       classes.push(classname);
     });
     return classes;
+  }
+
+  async getTypes(classType: "entities" | "entries" | "persons", classname: string) {
+    const loMap = {
+      "entities": "types",
+      "entries": "entrytypes",
+      "persons": "persontypes"
+    };
+
+    const { response, body } = await this.request({
+      description: "getTypes",
+      exec: `/lodel/admin/index.php?do=list&lo=${loMap[classType]}&class=${classname}`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+
+    const types: Type[] = [];
+    $("table.statistics tr:not(:first-child)").each(function (this: cheerio.Element) {
+      const href = $(this).find("a").attr("href") || "";
+      const id = (href.match(/&id=(\d+)/) || [])[1];
+      types.push({
+        type: $(this).find("td:first-of-type").text(),
+        class: classname,
+        id: Number(id)
+      });
+    });
+    return types;
   }
 }
 
