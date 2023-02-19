@@ -125,6 +125,7 @@ class LodelSession {
   headers: IncomingHttpHeaders | undefined;
   queue!: PQueue;
   logger: winston.Logger;
+  isLodelAdmin?: boolean;
 
   constructor(baseUrl: string, { concurrency = defaults.concurrency, timeout = defaults.timeout } = defaults) {
     this.logger = logger;
@@ -188,6 +189,34 @@ class LodelSession {
     });
 
     return this.queue.add(runRequest, { priority });
+  }
+
+  async checkLodelAdmin(noCache = false) {
+    if (noCache === false && this.isLodelAdmin != null) return this.isLodelAdmin;
+
+    const { response, body } = await this.request({
+      description: "checkLodelAdmin",
+      baseUrl: new URL(this.baseUrl).origin,
+      exec: "lodeladmin/index.php",
+      method: "get",
+      expectedStatusCode: false,
+      priority: 1,
+      config: {
+        followAllRedirects: false,
+        followRedirect: false
+      }
+    });
+
+    this.isLodelAdmin = response.statusCode === 200;
+    return this.isLodelAdmin;
+  }
+
+  async lodelAdminRequired() {
+    const isAdmin = await this.checkLodelAdmin();
+    if (isAdmin) return;
+    const errMsg = "Lodeladmin access level is required for this action";
+    logger.error(errMsg);
+    throw new Error(errMsg);
   }
 
   async getAvailableTypes(idParent: number) {
@@ -830,7 +859,7 @@ class LodelSession {
           site: sitename
         }
       }
-    })
+    });
   }
 
   async getClasses(classType: "entities" | "entries" | "persons") {
@@ -850,6 +879,8 @@ class LodelSession {
   }
 
   async getTypes(classType: "entities" | "entries" | "persons", classname: string) {
+    await this.lodelAdminRequired();
+
     const loMap = {
       "entities": "types",
       "entries": "entrytypes",

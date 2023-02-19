@@ -43,6 +43,9 @@ const site = {
 
     let output;
 
+    output = await session.checkLodelAdmin();
+    console.log("checkLodelAdmin", output);
+
     output = await session.getAvailableTypes(0);
     console.log("getAvailableTypes", output);
 

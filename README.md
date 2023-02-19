@@ -59,6 +59,10 @@ Authenticate in Lodel. See "Usage" on top.
 
 Set request `concurrency` setting.
 
+### `checkLodelAdmin(noCache = false)`
+
+Check if the current account has lodeladmin rights. The return boolean value is stored in `session.isLodelAdmin`.
+
 ### `createEntity({ idParent: number, idType: number, data: {} }, defaultData: {})`
 
 Create a new entity with type `idType` in parent `idParent`. `data` parameter contains the data sent in the form.
@@ -177,6 +181,8 @@ Sort entities according to `list` of ids. `sitename`, which is the name of the s
 List classes defined in editorial model.
 
 ### `getTypes(classType: "entities" | "entries" | "persons", classname: string)`
+
+**Lodeladmin access level required.**
 
 List available types for an entity, entry or person class.
 
