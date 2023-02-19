@@ -2,7 +2,7 @@
 
 > Node.js API for [Lodel](https://github.com/OpenEdition/lodel/)
 
-Note: The implementation of this toolbox is done according to my personal needs and this library is not intended to offer an exhaustive API. However feel free to create issues or to contribute if you want to add features that meet your own specific needs.
+Note: The implementation of this toolbox is done according to my personal needs and this library is not intended to offer an exhaustive API. Feel free to contribute if you want to add your own features.
 
 ## Installation
 
@@ -22,25 +22,32 @@ npm run build
 ```javascript
 const LodelSession = require("lodapi");
 
-// Instanciate the class
 const options = {
   concurrency: 2, // Default: Infinity
   timeout: 10000 // Default: 30000
 };
-const session = new LodelSession("https://url-to-lodel-website.com", options);
 
-// First of all authenticate
-session.auth({ login: "user", password: "pwd" })
-  .then(() => {
-    // Then use API here
-    // (...)
-  })
-  .catch(console.error);
+(async () => {
+  // Instantiate the class
+  const session = new LodelSession("https://url-to-lodel-website.com", options);
+
+  try {
+    // Authenticate in Lodel
+    await session.auth({ login: "user", password: "pwd" });
+
+    // Then do stuff
+    const output = await session.getChildren(0);
+    console.log(output);
+
+  } catch (e) {
+    console.error(e);
+  }
+})();
 ```
 
 ## Warning
 
-Methods which submit data using the Lodel entity form can cause data loss depending on which type of field is visible in the form. This is due to some weird fields used by Lodel, especially for adding entities to entries. The safest way to avoid such problems is to hide thoses fields from the admin panel before using any dangerous method.
+Methods which submit data using the Lodel entity form can cause data loss depending on which type of field is visible in the form. This is due to some weird fields used by Lodel, especially for adding entities to entries. The safest way to avoid such problems is to hide those fields from the admin panel before using any dangerous method.
 
 ## LodelSession methods
 
@@ -121,13 +128,13 @@ Move entry `id` to index `type` (it has to be within the same class). If an entr
 
 Connect entities with entries.
 
-If `idType` is declared then it will be used as `idtype` for all entries. Otherwise the script will run `getEntry()` on each individual entry in order to find its type (= additionnal requests).
+If `idType` is declared then it will be used as `idtype` for all entries. Otherwise the script will run `getEntry()` on each individual entry in order to find its type (= additional requests).
 
 ### `dissociateAllEntities(idEntry: number, idType?: number)`
 
 Remove association of `idEntry` with all entries.
 
-If `idType` is not declared the script will run `getEntry()` to find it from idEntry (= additionnal request).
+If `idType` is not declared the script will run `getEntry()` to find it from idEntry (= additional request).
 
 ### `deleteEntry(id: number)`
 
@@ -147,7 +154,7 @@ This is a workaround used in mergePersons(). When resubmitting an entity form, L
 
 ### `mergePersons(idBase: number, idPersons: number[])`
 
-Merge persons listed in `idPerson` in a person which will have the `idBase` data (the lowest id among all thoses persons will be kept by Lodel). It comes in very handy when cleaning the duplicates among authors.
+Merge persons listed in `idPerson` in a person which will have the `idBase` data (the lowest id among all those persons will be kept by Lodel). It comes in very handy when cleaning the duplicates among authors.
 
 **Since this method submits the entity form, it can cause data loss so be careful.**
 
