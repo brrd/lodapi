@@ -6,7 +6,7 @@ import * as request from "request";
 import { URL } from "url";
 import urljoin = require("url-join");
 import { parseForm } from "./utils";
-import  { createLogger, format, transports } from "winston";
+import { createLogger, format, transports } from "winston";
 import winston = require("winston");
 const { combine, timestamp, printf } = format;
 
@@ -127,9 +127,9 @@ class LodelSession {
     this.queue = new PQueue({concurrency});
   }
 
-  auth({ login, password }: Credentials) {
+  async auth({ login, password }: Credentials) {
     logger.info(`Auth`);
-    const r = this.request({
+    const { response, body } = await this.request({
       description: "auth",
       exec: "/lodel/edition/login.php",
       method: "post",
@@ -147,10 +147,8 @@ class LodelSession {
       },
     });
 
-    return r.then(({ response, body }: RequestResult) => {
-      this.headers = response.request.headers;
-      return response;
-    });
+    this.headers = response.request.headers;
+    return response;
   }
 
   request({ description, baseUrl = this.baseUrl, exec, method, config = {}, expectedStatusCode = 200, isAuth = false, priority = 0 }: RequestOptions) {
@@ -180,59 +178,56 @@ class LodelSession {
     return this.queue.add(runRequest, { priority });
   }
 
-  getAvailableTypes(idParent: number) {
-    const r = this.request({
+  async getAvailableTypes(idParent: number) {
+    const { response, body } = await this.request({
       description: "getAvailableTypes",
       exec: `/lodel/edition/index.php?id=${idParent}`,
       method: "get"
     });
 
-    return r.then(({ response, body }: RequestResult) => {
-      const availableTypes = ((body) => {
-        const $ = cheerio.load(body);
-        const types: EntityType[] = [];
-        $("#addEntity select option").each(function (this: cheerio.Element) {
-          const value = $(this).attr("value");
-          if (value == null) return;
-          const id = (value.match(/\d+$/) || [])[0];
-          if (id == null) return;
-          const name = $(this).text().trim();
-          types.push({ name, id: Number(id) });
-        });
-        return types;
-      })(body);
-
-      if (availableTypes == null) {
-        const err = Error(`Could not get types of parent ${idParent}`);
-        logger.error(err);
-        throw err;
-      }
-      return availableTypes;
-    });
-  }
-
-  getChildren(idParent: number) {
-    const r = this.request({
-      description: "getAvailableTypes",
-      exec: `/lodel/edition/index.php?id=${idParent}`,
-      method: "get"
-    });
-
-    return r.then(({ response, body }: RequestResult) => {
-      const $ = cheerio.load(body);
-      const entities: Entity[] = [];
-      $("#listEntities li").each(function (this: cheerio.Element) {
-        const id = parseInt(($(this).attr("id") || "").replace(/.*_(\d+)$/, "$1"), 10);
-        const type = $(this).find(".type_document").text().replace(/\((.*)\)/, "$1");
-        const title = $(this).find(".titre_document a").text().trim();
-        const entity = { idParent, id, type, title };
-        entities.push(entity);
+    const availableTypes = ((html) => {
+      const $ = cheerio.load(html);
+      const types: EntityType[] = [];
+      $("#addEntity select option").each(function (this: cheerio.Element) {
+        const value = $(this).attr("value");
+        if (value == null)
+          return;
+        const id = (value.match(/\d+$/) || [])[0];
+        if (id == null)
+          return;
+        const name = $(this).text().trim();
+        types.push({ name, id: Number(id) });
       });
-      return entities;
-    });
+      return types;
+    })(body);
+    if (availableTypes == null) {
+      const err = Error(`Could not get types of parent ${idParent}`);
+      logger.error(err);
+      throw err;
+    }
+    return availableTypes;
   }
 
-  createEntity({ idParent, idType, data = {}, entries = {} }: EntityOptions, defaultData = {}) {
+  async getChildren(idParent: number) {
+    const { response, body } = await this.request({
+      description: "getAvailableTypes",
+      exec: `/lodel/edition/index.php?id=${idParent}`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+    const entities: Entity[] = [];
+    $("#listEntities li").each(function (this: cheerio.Element) {
+      const id = parseInt(($(this).attr("id") || "").replace(/.*_(\d+)$/, "$1"), 10);
+      const type = $(this).find(".type_document").text().replace(/\((.*)\)/, "$1");
+      const title = $(this).find(".titre_document a").text().trim();
+      const entity = { idParent, id, type, title };
+      entities.push(entity);
+    });
+    return entities;
+  }
+
+  async createEntity({ idParent, idType, data = {}, entries = {} }: EntityOptions, defaultData = {}) {
     const form: { [key: string]: any } = {
       do: "edit",
       id: 0,
@@ -253,7 +248,7 @@ class LodelSession {
       form[`entries[${key}]`] = entries[key];
     });
 
-    const r = this.request({
+    const { response, body } = await this.request({
       description: "createEntity",
       exec: "/lodel/edition/index.php",
       method: "post",
@@ -264,37 +259,37 @@ class LodelSession {
       }
     });
 
-    return r.then(({ response, body }: RequestResult) => {
-      const getEntityId = (response: IncomingMessage) => {
-        const location = response && response.headers && response.headers.location;
-        if (location == null) return null;
-        const match = location.match(/\d+$/);
-        return match ? match[0] : null;
-      };
-      const entityId = getEntityId((response));
-      if (entityId == null) {
-        const lodelError = ((body) => {
-          const $ = cheerio.load(body);
-          const text = $("#editEntities > .error").text();
-          if (!text) return null;
-          return "(" + text.replace(/(\n|\s)+/g, " ") + ")";
-        })(body);
-        const err = Error(`Can't get id of created entity ${lodelError}`);
-        logger.error(err);
-        throw err;
-      }
-      return parseInt(entityId, 10);
-    });
+    const getEntityId = (msg: IncomingMessage) => {
+      const location = msg && msg.headers && msg.headers.location;
+      if (location == null)
+        return null;
+      const match = location.match(/\d+$/);
+      return match ? match[0] : null;
+    };
+    const entityId = getEntityId((response));
+    if (entityId == null) {
+      const lodelError = ((html) => {
+        const $ = cheerio.load(html);
+        const text = $("#editEntities > .error").text();
+        if (!text)
+          return null;
+        return "(" + text.replace(/(\n|\s)+/g, " ") + ")";
+      })(body);
+      const err = Error(`Can't get id of created entity ${lodelError}`);
+      logger.error(err);
+      throw err;
+    }
+    return parseInt(entityId, 10);
   }
 
   createPublication(options: EntityOptions) {
     return this.createEntity(options, { titre: "New Publication", datepubli: "today" });
   }
 
-  uploadDoc({ filepath, idParent, idType }: Doc) {
+  async uploadDoc({ filepath, idParent, idType }: Doc) {
     // 1. Submit upload form and get OTX task id
-    const submitUpload = () => {
-      const r = this.request({
+    const submitUpload = async () => {
+      const { response, body } = await this.request({
         description: "uploadDoc.submitUpload",
         exec: `/lodel/edition/oochargement.php?idparent=${idParent}&idtype=${idType}`,
         method: "post",
@@ -310,32 +305,30 @@ class LodelSession {
         }
       });
 
-      return r.then(({ response, body }: RequestResult) => {
-        // Get OTX task id after upload
-        const getTaskId = (body: any) => {
-          if (typeof body !== "string") return null;
-          const re = /window\.parent\.o\.changeStep\((\d+),\s+"(\d+)"\);/;
-          const match = body.match(re);
-          // OTX error
-          if ((match == null) || (match[1] !== "3") || (match[2] == null)) {
-            return null;
-          }
-          return Number(match[2]);
-        };
-
-        const taskId = getTaskId(body);
-        if (taskId == null) {
-          const err = Error(`Could not get taskId for upload of doc ${filepath}`);
-          logger.error(err);
-          throw err;
+      // Get OTX task id after upload
+      const getTaskId = (html: any) => {
+        if (typeof html !== "string")
+          return null;
+        const re = /window\.parent\.o\.changeStep\((\d+),\s+"(\d+)"\);/;
+        const match = html.match(re);
+        // OTX error
+        if ((match == null) || (match[1] !== "3") || (match[2] == null)) {
+          return null;
         }
-        return { taskId };
-      });
+        return Number(match[2]);
+      };
+      const taskId = getTaskId(body);
+      if (taskId == null) {
+        const err = Error(`Could not get taskId for upload of doc ${filepath}`);
+        logger.error(err);
+        throw err;
+      }
+      return { taskId };
     }
 
     // 2. Get OTX task status
-    const getStatus = ({ taskId }: OtxTask) => {
-      const r = this.request({
+    const getStatus = async ({ taskId }: OtxTask) => {
+      const { response, body } = await this.request({
         description: "uploadDoc.getStatus",
         exec: `/lodel/edition/checkimport.php?idtask=${taskId}&reload=0`,
         method: "get",
@@ -346,27 +339,25 @@ class LodelSession {
         }
       });
 
-      return r.then(({ response, body }: RequestResult) => {
-        const status = ((body) => {
-          const $ = cheerio.load(body);
-          const status = $("#status").text();
-          if (!status) return null;
-          return status.replace(/(\n|\s)+/g, " ");
-        })(body);
-
-        if (status == null) {
-          const err = Error(`Could not get OTX log for task ${taskId}: status is null`);
-          logger.error(err);
-          throw err;
-        }
-        return { taskId, status };
-      });
+      const status = ((html) => {
+        const $ = cheerio.load(html);
+        const statusText = $("#status").text();
+        if (!statusText)
+          return null;
+        return statusText.replace(/(\n|\s)+/g, " ");
+      })(body);
+      if (status == null) {
+        const err = Error(`Could not get OTX log for task ${taskId}: status is null`);
+        logger.error(err);
+        throw err;
+      }
+      return { taskId, status };
     }
 
     // 3. Validate OTX task
-    const validateTask = ({ taskId, status }: OtxTask) => {
+    const validateTask = async ({ taskId, status }: OtxTask) => {
       let redirectCount = 0;
-      const r = this.request({
+      const { response, body } = await this.request({
         description: "uploadDoc.validateTask",
         exec: `/lodel/edition/index.php?do=import&idtask=${taskId}&finish=oui&visualiserdocument=oui&reload=`,
         method: "post",
@@ -378,32 +369,29 @@ class LodelSession {
         }
       });
 
-      return r.then(({ response, body }: RequestResult) => {
-        const getDocId = (href: string) => {
-          const match = href.match(/\d+$/);
-          if (match == null) return null;
-          return Number(match[0]);
-        };
-
-        const href = response.request.uri.href;
-        const docId = getDocId(href);
-        if (docId == null) {
-          const err = Error(`Error while uploading '${filepath}': could not get id after upload`);
-          logger.error(err);
-          throw err;
-        }
-        return { taskId, status, docId };
-      });
+      const getDocId = (href: string) => {
+        const match = href.match(/\d+$/);
+        if (match == null)
+          return null;
+        return Number(match[0]);
+      };
+      const docId = getDocId(response.request.uri.href);
+      if (docId == null) {
+        const err = Error(`Error while uploading '${filepath}': could not get id after upload`);
+        logger.error(err);
+        throw err;
+      }
+      return { taskId, status, docId };
     }
 
     // Main
-    return submitUpload()
-      .then(getStatus)
-      .then(validateTask);
+    let task = await submitUpload();
+    task = await getStatus(task);
+    return validateTask(task);
   }
 
   // WARNING: this feature is experimental and can potentially cause data loss
-  uploadPdf({ filepath, docId }: Pdf) {
+  async uploadPdf({ filepath, docId }: Pdf) {
     // We need to submit again the entire form with its correct values in order to upload the pdf :-(
     const getForm = () => {
       return this.request({
@@ -439,51 +427,48 @@ class LodelSession {
     };
 
     // Main
-    return getForm().then(submitNewForm);
+    const requestResult = await getForm();
+    return submitNewForm(requestResult);
   }
 
-  getIndex(id: number, type: "entries" | "persons"): Promise<Entry> {
-    const r = this.request({
+  async getIndex(id: number, type: "entries" | "persons"): Promise<Entry> {
+    const { response, body } = await this.request({
       description: `getIndex(id:${id})`,
       exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${type}`,
       method: "get"
     });
 
-    return r.then(({ response, body }: RequestResult) => {
-      const $ = cheerio.load(body);
-      const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
-      const idType = Number(idTypeStr);
-      if (!idType) {
-        const err = Error(`Error: idType not found on index ${id}`);
+    const $ = cheerio.load(body);
+    const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
+    const idType = Number(idTypeStr);
+    if (!idType) {
+      const err = Error(`Error: idType not found on index ${id}`);
+      logger.error(err);
+      throw err;
+    }
+    const relatedEntities: number[] = [];
+    $(".listEntities li").each(function (this: cheerio.Element) {
+      const href = $(this).find(".action .move + .item a").eq(0).attr("href") || "";
+      const match = (href.match(/\d+$/) || [])[0] || "";
+      if (match.length > 0) {
+        const entityId = Number(match);
+        relatedEntities.push(entityId);
+      } else {
+        const err = Error(`Error: missing related entity id in index ${id}`);
         logger.error(err);
         throw err;
       }
-
-      const relatedEntities: number[] = [];
-      $(".listEntities li").each(function (this: cheerio.Element) {
-        const href = $(this).find(".action .move + .item a").eq(0).attr("href") || "";
-        const match = (href.match(/\d+$/) || [])[0] || "";
-        if (match.length > 0) {
-          const id = Number(match);
-          relatedEntities.push(id);
-        } else {
-          const err = Error(`Error: missing related entity id in index ${id}`);
-          logger.error(err);
-          throw err;
-        }
-      });
-
-      const data: { [key: string]: string } = {};
-      $("form.entry input[name^='data']").each(function (this: cheerio.Element) {
-        const name = $(this).attr("name");
-        const value = $(this).attr("value") || "";
-        data[name!] = value;
-      });
-      return { id, idType, relatedEntities, data };
     });
+    const data: { [key: string]: string; } = {};
+    $("form.entry input[name^='data']").each(function (this: cheerio.Element) {
+      const name = $(this).attr("name");
+      const value = $(this).attr("value") || "";
+      data[name!] = value;
+    });
+    return { id, idType, relatedEntities, data };
   }
 
-  editIndex(id: number, type: "entries" | "persons", data?: {}) {
+  async editIndex(id: number, type: "entries" | "persons", data?: {}) {
     // Same than uploadPdf() but probably less risky because we don't have weird Lodel <select> in this form
     const getForm = () => {
       return this.request({
@@ -523,7 +508,9 @@ class LodelSession {
       return Promise.resolve({ response, body });
     };
 
-    return getForm().then(submitNewForm).then(findErrors);
+    const requestResult = await getForm();
+    const requestResult2 = await submitNewForm(requestResult);
+    return findErrors(requestResult2);
   }
 
   deleteIndex(id: number, type: "entries" | "persons") {
@@ -540,7 +527,7 @@ class LodelSession {
     return this.getIndex(id, "entries");
   }
 
-  getEntryIdByName(name: string, idType: number) {
+  async getEntryIdByName(name: string, idType: number) {
     name = name.trim();
 
     const getEntries = () => {
@@ -571,74 +558,73 @@ class LodelSession {
       return id;
     };
 
-    return getEntries().then(findEntryId);
+    const requestResult = await getEntries();
+    return findEntryId(requestResult);
   }
 
-  editEntryName(id: number, name: string) {
+  async editEntryName(id: number, name: string) {
     logger.info(`editEntryName ${id}, ${name}`);
 
-    const getEntryType = () => {
-      return this.getEntry(id).then((entry) => {
-        const type = entry.idType;
-        if (!type) {
-          const err = Error(`Could not find type of entry ${id}`);
-          logger.error(err);
-          throw err;
-        }
-        return type;
-      });
+    const getEntryType = async () => {
+      const entry = await this.getEntry(id);
+      const type = entry.idType;
+      if (!type) {
+        const err = Error(`Could not find type of entry ${id}`);
+        logger.error(err);
+        throw err;
+      }
+      return type;
     };
 
-    return this.editIndex(id, "entries", {
-      "data[nom]": name
-    })
-    .catch((reason: any) => {
+    try {
+      return await this.editIndex(id, "entries", {
+        "data[nom]": name
+      });
+    } catch (reason: any) {
       const msg = reason.toString().trim();
       const uniquenessMsg = "Le champ doit être unique.";
-      if (msg.indexOf(uniquenessMsg) === -1) throw reason;
-      // Use mergeEntries when an entry with this name already exists in target index
-      return Promise.resolve()
-        .then(getEntryType)
-        .then((type: number) => this.getEntryIdByName(name, type))
-        .then((targetId) => this.mergeEntries(targetId, [id]));
-    });
+      if (msg.indexOf(uniquenessMsg) === -1)
+        throw reason;
+      const entryType = await getEntryType();
+      const targetId = await this.getEntryIdByName(name, entryType);
+      return await this.mergeEntries(targetId, [id]);
+    }
   }
 
-  editEntryType(id: number, type: number) {
+  async editEntryType(id: number, type: number) {
     logger.info(`editEntryType ${id}, ${type}`);
 
-    const getEntryName = () => {
-      return this.getEntry(id).then((entry) => {
-        const name = entry.data["data[nom]"];
-        if (!name) {
-          const err = Error(`Could not find name of entry ${id}`);
-          logger.error(err);
-          throw err;
-        }
-        return name;
-      });
+    const getEntryName = async () => {
+      const entry = await this.getEntry(id);
+      const name = entry.data["data[nom]"];
+      if (!name) {
+        const err = Error(`Could not find name of entry ${id}`);
+        logger.error(err);
+        throw err;
+      }
+      return name;
     };
 
-    return this.editIndex(id, "entries", {
-      "idtype": type
-    })
-    .catch((reason: any) => {
+    try {
+      return await this.editIndex(id, "entries", {
+        "idtype": type
+      });
+    } catch (reason: any) {
       const msg = reason.toString().trim();
       const uniquenessMsg = "Le champ doit être unique.";
-      if (msg.indexOf(uniquenessMsg) === -1) throw reason;
-      // Use mergeEntries when an entry with this name already exists in target index
-      return Promise.resolve()
-        .then(getEntryName)
-        .then((name: string) => this.getEntryIdByName(name, type))
-        .then((targetId) => this.mergeEntries(targetId, [id]));
-    });
+      if (msg.indexOf(uniquenessMsg) === -1)
+        throw reason;
+      const entryName = await getEntryName();
+      const targetId = await this.getEntryIdByName(entryName, type);
+      return await this.mergeEntries(targetId, [id]);
+    }
   }
 
-  associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
+  async associateEntries(idEntities: number[], idEntries: number[], idType?: number) {
     logger.info(`associateEntries : idEntities ${idEntities}, idEntries ${idEntries}, idType ${idType}`);
 
     // Create entries query string
-    const getEntriesQuery = new Promise<string>((resolve, reject) => {
+    const entriesQuery = await new Promise<string>((resolve, reject) => {
       if (idType) {
         const entriesQuery = idEntries.reduce((query: string, idEntry: number, i: number) => `${query}&identries[${i}]=${idEntry}_${idType}`, "");
         return resolve(entriesQuery);
@@ -658,17 +644,15 @@ class LodelSession {
     });
 
     // Post request
-    return getEntriesQuery.then((entriesQuery) => {
-      const entitiesQuery = idEntities.reduce((query: string, idEntity: number, i: number) => `${query}&identities[${i}]=${idEntity}`, "");
-      return this.request({
-        description: "associateEntries",
-        exec: `/lodel/admin/index.php?do=massassoc&lo=entries&edit=1&associate=1${entitiesQuery}${entriesQuery}`,
-        method: "get"
-      });
+    const entitiesQuery = idEntities.reduce((query: string, idEntity: number, i: number) => `${query}&identities[${i}]=${idEntity}`, "");
+    return await this.request({
+      description: "associateEntries",
+      exec: `/lodel/admin/index.php?do=massassoc&lo=entries&edit=1&associate=1${entitiesQuery}${entriesQuery}`,
+      method: "get"
     });
   }
 
-  dissociateAllEntities(idEntry: number, idType?: number) {
+  async dissociateAllEntities(idEntry: number, idType?: number) {
     const dissociate = ({id, idType}: Entry) => {
       return this.request({
         description: "dissociateAllEntities",
@@ -680,14 +664,15 @@ class LodelSession {
     if (idType) {
       return dissociate({id: idEntry, idType, data: {}});
     }
-    return this.getEntry(idEntry).then(dissociate);
+    const entry = await this.getEntry(idEntry);
+    return dissociate(entry);
   }
 
   deleteEntry(id: number) {
     return this.deleteIndex(id, "entries");
   }
 
-  mergeEntries(idTargetEntry: number, idEntries: number[]) {
+  async mergeEntries(idTargetEntry: number, idEntries: number[]) {
     idEntries = idEntries.filter((id) => id !== idTargetEntry);
 
     logger.info(`mergeEntries : idTargetEntry ${idTargetEntry}, idEntries ${idEntries}`);
@@ -708,8 +693,8 @@ class LodelSession {
       return Promise.all(proms);
     }
 
-    return this.getEntry(idTargetEntry)
-      .then(associateEntitiesAndDeleteEntries)
+    const targetEntry = await this.getEntry(idTargetEntry);
+    return associateEntitiesAndDeleteEntries(targetEntry);
   }
 
   getPerson(id: number) {
@@ -736,7 +721,7 @@ class LodelSession {
   // This is a workaround used in mergePersons()
   // When resubmitting an entity form, Lodel recreates the relations between entries and this entity. This is useful to remove duplicate entries : 1) rename all duplicate entries with the same (expected) name, 2) resubmit every associated entity. At the end all the entities will be related to the same entry (= the lowest id)
   // TODO: factorize this method with other which submit additionnal data to the entity form (eg: uploadPdf)
-  resubmitEntity(docId: number) {
+  async resubmitEntity(docId: number) {
     const getForm = () => {
       return this.request({
         description: "resubmitEntity(1)",
@@ -763,11 +748,12 @@ class LodelSession {
     };
 
     // Main
-    return getForm().then(submitNewForm);
+    const requestResult = await getForm();
+    return submitNewForm(requestResult);
   }
 
   // WARNING: this uses resubmitEntity so this can be unsafe
-  mergePersons(idBase: number, idPersons: number[]) {
+  async mergePersons(idBase: number, idPersons: number[]) {
     idPersons = idPersons.filter((id) => id !== idBase);
 
     logger.info(`mergePersons ${idBase}, ${idPersons}`);
@@ -780,16 +766,15 @@ class LodelSession {
       return Promise.all(proms);
     }
 
-    const getRelatedEntities = () => {
+    const getRelatedEntities = async () => {
       const all = idPersons.concat(idBase);
       const proms = all.map((id) => this.getPerson(id));
-      return Promise.all(proms).then((persons) => {
-        const relatedEntities = persons.reduce((arr: number[], person) => {
-          return arr.concat(person.relatedEntities || []);
-        }, []);
-        const uniques = Array.from(new Set(relatedEntities));
-        return uniques;
-      });
+      const persons = await Promise.all(proms);
+      const relatedEntities = persons.reduce((arr: number[], person) => {
+        return arr.concat(person.relatedEntities || []);
+      }, []);
+      const uniques = Array.from(new Set(relatedEntities));
+      return uniques;
     }
 
     const resubmitEntities = (entities: number[]) => {
@@ -797,13 +782,13 @@ class LodelSession {
       return Promise.all(proms);
     }
 
-    return this.getPerson(idBase)
-      .then(updatePersonsData)
-      .then(getRelatedEntities)
-      .then(resubmitEntities);
+    const basePerson = await this.getPerson(idBase);
+    await updatePersonsData(basePerson);
+    const entities = await getRelatedEntities();
+    return resubmitEntities(entities);
   }
 
-  restoreBackup(file: string) {
+  async restoreBackup(file: string) {
     const checkResult = ({ response, body }: RequestResult) => {
       if (!body.includes("Importation des données réussie")) {
         const err = Error(`Could not find restoreBackup success message (${file})`);
@@ -812,12 +797,13 @@ class LodelSession {
       }
     };
 
-    return this.request({
+    const requestResult = await this.request({
       description: "restoreBackup",
       exec: `/lodel/admin/index.php?do=import&lo=data&file=${file}`,
       method: "get",
       expectedStatusCode: false // don't check status code, it's working anyway
-    }).then(checkResult);
+    });
+    return checkResult(requestResult);
   }
 
   sortEntities(sitename: string, list: number[]) {
