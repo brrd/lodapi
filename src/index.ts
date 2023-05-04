@@ -92,6 +92,24 @@ const htpasswd = {
   sendImmediately: false
 };
 
+// Parse form fields into an object
+// TODO: factoriser
+function getFormData ($:cheerio.CheerioAPI, selector: string) {
+  const data: { [key: string]: string } = {};
+  $(selector).each(function(this: cheerio.Node) {
+    const $el = $(this);
+    const name = $el.attr("name");
+    if (name == null) return;
+    if ($el.attr("type") === "checkbox") {
+      data[name] = $el.prop("checked");
+      return;
+    }
+    const val = $el.val();
+    if (val) data[name] = (typeof val === "string" ? val : val[0]);
+  });
+  return data;
+}
+
 // Init Logger
 const myFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
@@ -918,27 +936,13 @@ class LodelSession {
     };
 
     const { response, body } = await this.request({
-      description: "getTypes",
+      description: "getTypeDetails",
       exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${loMap[classType]}`,
       method: "get"
     });
 
     const $ = cheerio.load(body);
-    const data: { [key: string]: string } = {};
-
-    $("#lodel-container form input[name]").each(function(this: cheerio.Element) {
-      const $el = $(this);
-      const name = $el.attr("name");
-      if (name == null) return;
-      if ($el.attr("type") === "checkbox") {
-        data[name] = $el.prop("checked");
-        return;
-      }
-      const val = $el.val();
-      if (val) data[name] = (typeof val === "string" ? val : val[0]);
-    });
-
-    return data;
+    return getFormData($, "#lodel-container form input[name]");
   }
 }
 
