@@ -907,6 +907,39 @@ class LodelSession {
     });
     return types;
   }
+
+  async getTypeDetails(classType: "entities" | "entries" | "persons", id: number) {
+    await this.lodelAdminRequired();
+
+    const loMap = {
+      "entities": "types",
+      "entries": "entrytypes",
+      "persons": "persontypes"
+    };
+
+    const { response, body } = await this.request({
+      description: "getTypes",
+      exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${loMap[classType]}`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+    const data: { [key: string]: string } = {};
+
+    $("#lodel-container form input[name]").each(function(this: cheerio.Element) {
+      const $el = $(this);
+      const name = $el.attr("name");
+      if (name == null) return;
+      if ($el.attr("type") === "checkbox") {
+        data[name] = $el.prop("checked");
+        return;
+      }
+      const val = $el.val();
+      if (val) data[name] = (typeof val === "string" ? val : val[0]);
+    });
+
+    return data;
+  }
 }
 
 module.exports = LodelSession;

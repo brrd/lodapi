@@ -182,9 +182,15 @@ List classes defined in editorial model.
 
 ### `getTypes(classType: "entities" | "entries" | "persons", classname: string)`
 
-**Lodeladmin access level required.**
+**Lodeladmin access level is required.**
 
 List available types for an entity, entry or person class.
+
+### `getTypeDetails(classType: "entities" | "entries" | "persons", id: number)`
+
+**Lodeladmin access level is required.**
+
+Get type details from its configuration form.
 
 ## Examples
 
