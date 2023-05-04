@@ -192,6 +192,12 @@ List available types for an entity, entry or person class.
 
 Get type details from its configuration form.
 
+### `getFields(classname: string)`
+
+**Lodeladmin access level is required.**
+
+Get type fields.
+
 ## Examples
 
 See `examples/` directory.

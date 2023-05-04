@@ -81,6 +81,11 @@ interface Type {
   data?: { [key: string]: string }
 }
 
+// Types and Fields have the same form
+interface Field extends Type {
+  group?: number
+}
+
 const defaults = {
   concurrency: Infinity,
   timeout: 30000
@@ -943,6 +948,32 @@ class LodelSession {
 
     const $ = cheerio.load(body);
     return getFormData($, "#lodel-container form input[name]");
+  }
+
+  async getFields(classname: string) {
+    await this.lodelAdminRequired();
+
+    const { response, body } = await this.request({
+      description: "getFields",
+      exec: `/lodel/admin/index.php?do=list&lo=tablefieldgroups&class=${classname}`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+    const fields: Field[] = [];
+    $("table.statistics tr:not(:nth-child(-n+3))").each(function (this: cheerio.Element) {
+      const href = $(this).find("a").attr("href") || "";
+      const id = (href.match(/&id=(\d+)/) || [])[1];
+      const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
+      const groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
+      fields.push({
+        type: $(this).find("td:first-of-type").text(),
+        class: classname,
+        id: Number(id),
+        group: groupId
+      });
+    });
+    return fields;
   }
 }
 
