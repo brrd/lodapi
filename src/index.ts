@@ -960,18 +960,33 @@ class LodelSession {
     });
 
     const $ = cheerio.load(body);
+
+    const hasGroups = $("table .status.group").length > 0;
+
+    // TODO: factoriser. Le code suivant est une version augmentée de getClasses()
     const fields: Field[] = [];
-    $("table.statistics tr:not(:nth-child(-n+3))").each(function (this: cheerio.Element) {
+    const selector = hasGroups ? "table.statistics tr:not(:nth-child(-n+3))" : "table.statistics tr:not(:first-child)";
+
+    $(selector).each(function (this: cheerio.Element) {
       const href = $(this).find("a").attr("href") || "";
       const id = (href.match(/&id=(\d+)/) || [])[1];
-      const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
-      const groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
-      fields.push({
+      if (id == null) return;
+
+      let groupId;
+      if (hasGroups) {
+        const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
+        groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
+      }
+
+      const field: Field = {
         type: $(this).find("td:first-of-type").text(),
         class: classname,
-        id: Number(id),
-        group: groupId
-      });
+        id: Number(id)
+      }
+      if (groupId) {
+        field.group = groupId;
+      }
+      fields.push(field);
     });
     return fields;
   }
