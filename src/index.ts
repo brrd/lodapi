@@ -83,7 +83,8 @@ interface Type {
 
 // Types and Fields have the same form
 interface Field extends Type {
-  group?: number
+  group?: number,
+  relation?: boolean
 }
 
 const defaults = {
@@ -973,15 +974,19 @@ class LodelSession {
       if (id == null) return;
 
       let groupId;
+      let isFirstTable = true;
       if (hasGroups) {
         const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
         groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
+      } else {
+        isFirstTable = $(this).parents("table").is(":first-of-type");
       }
 
       const field: Field = {
         type: $(this).find("td:first-of-type").text(),
         class: classname,
-        id: Number(id)
+        id: Number(id),
+        relation: !isFirstTable
       }
       if (groupId) {
         field.group = groupId;
