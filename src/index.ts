@@ -81,10 +81,17 @@ interface Type {
   data?: { [key: string]: string }
 }
 
-// Types and Fields have the same form
-interface Field extends Type {
+interface Field {
+  title: string,
+  name: string,
+  type: string,
+  style: string,
+  tei: string,
+  class: string,
+  id: number,
   group?: number,
   relation?: boolean
+  data?: { [key: string]: string }
 }
 
 const defaults = {
@@ -979,7 +986,6 @@ class LodelSession {
 
     const hasGroups = $("table .status.group").length > 0;
 
-    // TODO: factoriser. Le code suivant est une version augmentée de getClasses()
     const fields: Field[] = [];
     const selector = hasGroups ? "table.statistics tr:not(:nth-child(-n+3))" : "table.statistics tr:not(:first-child)";
 
@@ -998,7 +1004,11 @@ class LodelSession {
       }
 
       const field: Field = {
-        type: $(this).find("td:first-of-type").text(),
+        title: $(this).find("th:nth-child(1)").text(),
+        name: $(this).find("td:nth-child(2)").text(),
+        type: $(this).find("td:nth-child(3)").text(),
+        style: $(this).find("td:nth-child(4)").text(),
+        tei: $(this).find("td:nth-child(5)").text(),
         class: classname,
         id: Number(id),
         relation: !isFirstTable
