@@ -967,14 +967,15 @@ class LodelSession {
     return types;
   }
 
-  async getDetails(lo: "entities" | "entries" | "persons" | "tablefields", id: number) {
+  async getDetails(lo: "entities" | "entries" | "persons" | "tablefields" | "options", id: number) {
     await this.lodelAdminRequired();
 
     const loMap = {
       "entities": "types",
       "entries": "entrytypes",
       "persons": "persontypes",
-      "tablefields": "tablefields"
+      "tablefields": "tablefields",
+      "options": "options"
     };
 
     const { response, body } = await this.request({
