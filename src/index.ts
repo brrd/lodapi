@@ -112,13 +112,17 @@ function getFormData ($:cheerio.CheerioAPI, selector: string) {
   $(selector).each(function(this: cheerio.Node) {
     const $el = $(this);
     const name = $el.attr("name");
-    if (name == null) return;
+    if (name == null || name === "altertitle[__lodel_wildcard]") return;
     if ($el.attr("type") === "checkbox") {
       data[name] = $el.prop("checked");
       return;
     }
     const val = $el.val();
-    if (val) data[name] = (typeof val === "string" ? val : val[0]);
+    if (val) {
+      data[name] = (typeof val === "string" ? val : val[0]);
+      return;
+    }
+    data[name] = "";
   });
   return data;
 }
@@ -954,23 +958,24 @@ class LodelSession {
     return types;
   }
 
-  async getTypeDetails(classType: "entities" | "entries" | "persons", id: number) {
+  async getDetails(lo: "entities" | "entries" | "persons" | "tablefields", id: number) {
     await this.lodelAdminRequired();
 
     const loMap = {
       "entities": "types",
       "entries": "entrytypes",
-      "persons": "persontypes"
+      "persons": "persontypes",
+      "tablefields": "tablefields"
     };
 
     const { response, body } = await this.request({
       description: "getTypeDetails",
-      exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${loMap[classType]}`,
+      exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${loMap[lo]}`,
       method: "get"
     });
 
     const $ = cheerio.load(body);
-    return getFormData($, "#lodel-container form input[name]");
+    return getFormData($, "#lodel-container form [name]");
   }
 
   async getFields(classname: string) {

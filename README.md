@@ -190,11 +190,14 @@ List classes defined in editorial model.
 
 List available types for an entity, entry or person class.
 
-### `getTypeDetails(classType: "entities" | "entries" | "persons", id: number)`
+### `getDetails(lo: "entities" | "entries" | "persons" | "tablefields, id: number)`
 
 **Lodeladmin access level is required.**
 
-Get type details from its configuration form.
+Get information from the field definition form:
+
+* When `lo` is "entities", "entries" or "persons", get information about a type.
+* When `lo` is "tablefields", get information about a field.
 
 ### `getFields(classname: string)`
 
