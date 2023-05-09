@@ -886,7 +886,7 @@ class LodelSession {
     });
   }
 
-  async getClasses(classType: "entities" | "entries" | "persons") {
+  async listClasses(classType: "entities" | "entries" | "persons") {
     const { response, body } = await this.request({
       description: "getClasses",
       exec: `/lodel/admin/index.php?do=list&lo=classes&classtype=${classType}`,
@@ -902,7 +902,7 @@ class LodelSession {
     return classes;
   }
 
-  async getTypes(classType: "entities" | "entries" | "persons", classname: string) {
+  async listTypes(classType: "entities" | "entries" | "persons", classname: string) {
     await this.lodelAdminRequired();
 
     const loMap = {
