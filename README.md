@@ -205,6 +205,12 @@ Get information from the field definition form:
 
 Get type fields.
 
+### `listOptions()`
+
+**Lodeladmin access level is required.**
+
+List options defined in editorial model.
+
 ## Examples
 
 See `examples/` directory.

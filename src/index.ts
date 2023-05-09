@@ -94,6 +94,15 @@ interface Field {
   data?: { [key: string]: string }
 }
 
+interface Option {
+  name: string,
+  type: string,
+  title: string,
+  id: number,
+  group?: number,
+  data?: { [key: string]: string }
+}
+
 const defaults = {
   concurrency: Infinity,
   timeout: 30000
@@ -1024,6 +1033,43 @@ class LodelSession {
       fields.push(field);
     });
     return fields;
+  }
+
+  async listOptions() {
+    await this.lodelAdminRequired();
+
+    const { response, body } = await this.request({
+      description: "listOptions",
+      exec: `/lodel/admin/index.php?do=list&lo=optiongroups`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+
+    const options: Option[] = [];
+    const selector = "table.statistics tr:not(:nth-child(-n+2))";
+
+    $(selector).each(function (this: cheerio.Element) {
+      const href = $(this).find("a").attr("href") || "";
+      const id = (href.match(/&id=(\d+)/) || [])[1];
+      if (id == null) return;
+
+      let groupId;
+      const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
+      groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
+
+      const option: Option = {
+        name: $(this).find("td:nth-child(1)").text(),
+        type: $(this).find("td:nth-child(2)").text(),
+        title: $(this).find("td:nth-child(3)").text(),
+        id: Number(id),
+      }
+      if (groupId) {
+        option.group = groupId;
+      }
+      options.push(option);
+    });
+    return options;
   }
 }
 
