@@ -184,6 +184,10 @@ Return a list of available options ids.
 
 List classes defined in editorial model. `getDetail()` can be used to get more information about each individual class.
 
+### `getClassesData(classType: "entities" | "entries" | "persons", deap: boolean)`
+
+Get data about fields of all classes. If `deap` is true, a request is performed for each field to get its full details.
+
 ### `listTypes(classType: "entities" | "entries" | "persons", classname: string)`
 
 **Lodeladmin access level is required.**
@@ -200,11 +204,11 @@ Get information from the field definition form:
 * When `lo` is "tablefields", get information about a field.
 * When `lo` is "options", get information about an option field.
 
-### `getFields(classname: string)`
+### `getFields(classname: string, deap: boolean)`
 
 **Lodeladmin access level is required.**
 
-Get type fields.
+Get type fields. If `deap` is true, a request is performed for each field to get its full details.
 
 ### `listOptions()`
 

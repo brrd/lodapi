@@ -946,11 +946,11 @@ class LodelSession {
     return classes;
   }
 
-  async getClassesData(classType: "entities" | "entries" | "persons") {
+  async getClassesData(classType: "entities" | "entries" | "persons", deap = false) {
     await this.lodelAdminRequired();
 
     const classes = await this.listClasses(classType);
-    const proms = classes.map((classname) => this.getFields(classname));
+    const proms = classes.map((classname) => this.getFields(classname, deap));
     const arr = await Promise.all(proms);
     const obj = arr.reduce((res: { [key: string]: any }, current) => {
       if (current.length == 0) return res;
@@ -972,7 +972,7 @@ class LodelSession {
     };
 
     const { response, body } = await this.request({
-      description: "getTypes",
+      description: "getClassesData",
       exec: `/lodel/admin/index.php?do=list&lo=${loMap[classType]}&class=${classname}`,
       method: "get"
     });
@@ -1013,7 +1013,7 @@ class LodelSession {
     return getFormData($, "#lodel-container form [name]");
   }
 
-  async getFields(classname: string) {
+  async getFields(classname: string, deap = false) {
     await this.lodelAdminRequired();
 
     const { response, body } = await this.request({
@@ -1058,6 +1058,13 @@ class LodelSession {
       }
       fields.push(field);
     });
+
+    if (deap) {
+      const proms = fields.map(async (field) => {
+        field.data = await this.getDetails("tablefields", field.id);
+      });
+      await Promise.all(proms);
+    }
     return fields;
   }
 
