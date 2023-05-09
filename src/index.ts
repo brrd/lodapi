@@ -938,12 +938,28 @@ class LodelSession {
     });
 
     const $ = cheerio.load(body);
-    const classes: String[] = [];
+    const classes: string[] = [];
     $("table.statistics tr:not(:first-child) td:first-of-type").each(function (this: cheerio.Element) {
       const classname = $(this).text();
       classes.push(classname);
     });
     return classes;
+  }
+
+  async getClassesData(classType: "entities" | "entries" | "persons") {
+    await this.lodelAdminRequired();
+
+    const classes = await this.listClasses(classType);
+    const proms = classes.map((classname) => this.getFields(classname));
+    const arr = await Promise.all(proms);
+    const obj = arr.reduce((res: { [key: string]: any }, current) => {
+      if (current.length == 0) return res;
+      const classname = current[0].class;
+      if (!classname) return res;
+      res[classname] = current;
+      return res;
+    }, {});
+    return obj;
   }
 
   async listTypes(classType: "entities" | "entries" | "persons", classname: string) {
