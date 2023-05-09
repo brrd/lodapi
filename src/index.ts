@@ -103,6 +103,15 @@ interface Option {
   data?: { [key: string]: string }
 }
 
+interface InternalStyle {
+  style: string,
+  surrounding: string,
+  conversion: string,
+  otx: string,
+  greedy: boolean,
+  id: number
+}
+
 const defaults = {
   concurrency: Infinity,
   timeout: 30000
@@ -979,7 +988,7 @@ class LodelSession {
     };
 
     const { response, body } = await this.request({
-      description: "getTypeDetails",
+      description: "getDetails",
       exec: `/lodel/admin/index.php?do=view&id=${id}&lo=${loMap[lo]}`,
       method: "get"
     });
@@ -1071,6 +1080,38 @@ class LodelSession {
       options.push(option);
     });
     return options;
+  }
+
+  async listInternalStyles() {
+    await this.lodelAdminRequired();
+
+    const { response, body } = await this.request({
+      description: "listInternalStyles",
+      exec: `/lodel/admin/index.php?do=list&lo=internalstyles`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+
+    const styles: InternalStyle[] = [];
+    const selector = "table.statistics tr:not(:first-child)";
+
+    $(selector).each(function (this: cheerio.Element) {
+      const href = $(this).find("a").attr("href") || "";
+      const id = (href.match(/&id=(\d+)/) || [])[1];
+      if (id == null) return;
+
+      const style: InternalStyle = {
+        style: $(this).find("th:nth-child(1)").text(),
+        surrounding: $(this).find("td:nth-child(2)").text(),
+        conversion: $(this).find("td:nth-child(3)").text(),
+        otx: $(this).find("td:nth-child(4)").text(),
+        greedy: $(this).find("td:nth-child(5)").text() === "Oui", // FIXME: ne fonctionne qu'en français
+        id: Number(id),
+      }
+      styles.push(style);
+    });
+    return styles;
   }
 }
 

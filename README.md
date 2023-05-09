@@ -182,13 +182,13 @@ Return a list of available options ids.
 
 ### `listClasses(classType: "entities" | "entries" | "persons")`
 
-List classes defined in editorial model.
+List classes defined in editorial model. `getDetail()` can be used to get more information about each individual class.
 
 ### `listTypes(classType: "entities" | "entries" | "persons", classname: string)`
 
 **Lodeladmin access level is required.**
 
-List available types for an entity, entry or person class.
+List available types for an entity, entry or person class. `getDetail()` can be used to get more information about each individual type.
 
 ### `getDetails(lo: "entities" | "entries" | "persons" | "tablefields" | "options", id: number)`
 
@@ -210,7 +210,13 @@ Get type fields.
 
 **Lodeladmin access level is required.**
 
-List options defined in editorial model.
+List options defined in editorial model. `getDetail()` can be used to get more information about each individual option.
+
+### `listInternalStyles()`
+
+**Lodeladmin access level is required.**
+
+List internal styles defined in editorial model. `getDetail()` is not needed since this method already returns all the data about internal styles.
 
 ## Examples
 
