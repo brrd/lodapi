@@ -198,6 +198,12 @@ Get type details from its configuration form.
 
 Get type fields.
 
+### `listOptionsIds()`
+
+**Lodeladmin access level is required.**
+
+Return a list of available options ids.
+
 ## Examples
 
 See `examples/` directory.

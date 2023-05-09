@@ -995,6 +995,23 @@ class LodelSession {
     });
     return fields;
   }
+
+  async listOptionsIds() {
+    await this.lodelAdminRequired();
+
+    const { response, body } = await this.request({
+      description: "getFields",
+      exec: `/lodel/admin/index.php`,
+      method: "get"
+    });
+    const $ = cheerio.load(body);
+
+    return $("select.barInfo option[value*='lo=useroptiongroups']").map(function() {
+      const url = $(this).attr("value") || "";
+      const str = (url.match(/id=(\d+)/) || [])[1];
+      return Number(str);
+    }).get();
+  }
 }
 
 module.exports = LodelSession;
