@@ -176,6 +176,10 @@ Restore a backup. `file` is the path to the backup archive on the host.
 
 Sort entities according to `list` of ids. `sitename`, which is the name of the site in Lodel database, is required.
 
+### `listOptionsIds()`
+
+Return a list of available options ids.
+
 ### `listClasses(classType: "entities" | "entries" | "persons")`
 
 List classes defined in editorial model.
@@ -197,12 +201,6 @@ Get type details from its configuration form.
 **Lodeladmin access level is required.**
 
 Get type fields.
-
-### `listOptionsIds()`
-
-**Lodeladmin access level is required.**
-
-Return a list of available options ids.
 
 ## Examples
 
