@@ -952,7 +952,7 @@ class LodelSession {
     const classes = await this.listClasses(classType);
     const proms = classes.reduce((res: any[] = [], classname) => {
       res.push(this.getFields(classname, deap));
-      res.push(this.listTypes(classType, classname, deap));
+      res.push(this.getTypes(classType, classname, deap));
       return res;
     }, []);
 
@@ -975,7 +975,7 @@ class LodelSession {
     return obj;
   }
 
-  async listTypes(classType: "entities" | "entries" | "persons", classname: string, deap = false) {
+  async getTypes(classType: "entities" | "entries" | "persons", classname: string, deap = false) {
     await this.lodelAdminRequired();
 
     const loMap = {
