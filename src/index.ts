@@ -965,10 +965,20 @@ class LodelSession {
         res[classname] = {};
       }
       const isFields = current[0].name !== undefined;
+
+      // Use object with unique id for easier comparison
+      const toObject = (arr: any[] = [], idProp: string) => {
+        return arr.reduce((obj: { [key: string]: any }, item) => {
+          const key = item[idProp];
+          obj[key] = item;
+          return obj;
+        }, {});
+      }
+
       if (isFields) {
-        res[classname].fields = current;
+        res[classname].fields = toObject(current, "name");
       } else {
-        res[classname].types = current;
+        res[classname].types = toObject(current, "type");
       }
       return res;
     }, {});
