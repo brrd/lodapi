@@ -962,7 +962,7 @@ class LodelSession {
     return obj;
   }
 
-  async listTypes(classType: "entities" | "entries" | "persons", classname: string) {
+  async listTypes(classType: "entities" | "entries" | "persons", classname: string, deap = false) {
     await this.lodelAdminRequired();
 
     const loMap = {
@@ -989,6 +989,14 @@ class LodelSession {
         id: Number(id)
       });
     });
+
+    if (deap) {
+      const proms = types.map(async (type) => {
+        type.data = await this.getDetails(classType, type.id);
+      });
+      await Promise.all(proms);
+    }
+
     return types;
   }
 
