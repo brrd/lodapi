@@ -950,13 +950,26 @@ class LodelSession {
     await this.lodelAdminRequired();
 
     const classes = await this.listClasses(classType);
-    const proms = classes.map((classname) => this.getFields(classname, deap));
+    const proms = classes.reduce((res: any[] = [], classname) => {
+      res.push(this.getFields(classname, deap));
+      res.push(this.listTypes(classType, classname, deap));
+      return res;
+    }, []);
+
     const arr = await Promise.all(proms);
     const obj = arr.reduce((res: { [key: string]: any }, current) => {
       if (current.length == 0) return res;
       const classname = current[0].class;
       if (!classname) return res;
-      res[classname] = current;
+      if (!res[classname]) {
+        res[classname] = {};
+      }
+      const isFields = current[0].name !== undefined;
+      if (isFields) {
+        res[classname].fields = current;
+      } else {
+        res[classname].types = current;
+      }
       return res;
     }, {});
     return obj;

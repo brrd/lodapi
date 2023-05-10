@@ -186,7 +186,7 @@ List classes defined in editorial model. `getDetail()` can be used to get more i
 
 ### `getClassesData(classType: "entities" | "entries" | "persons", deap: boolean)`
 
-Get data about fields of all classes. If `deap` is true, a request is performed for each field to get its full details.
+Get data about fields and types of all classes. If `deap` is true, a request is performed for each field to get its full details.
 
 ### `listTypes(classType: "entities" | "entries" | "persons", classname: string, deap: boolean)`
 
