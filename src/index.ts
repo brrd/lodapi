@@ -233,7 +233,7 @@ class LodelSession {
           err = Error(`[request: ${description}] Unexpected status code: ${response.statusCode} (URL: ${requestConfig.url})`);
         }
         if (err) {
-          logger.error(err);
+          logger.error(err.message);
           return reject(err);
         };
         resolve({ response, body });
@@ -295,9 +295,9 @@ class LodelSession {
       return types;
     })(body);
     if (availableTypes == null) {
-      const err = Error(`Could not get types of parent ${idParent}`);
-      logger.error(err);
-      throw err;
+      const errMsg = `Could not get types of parent ${idParent}`;
+      logger.error(errMsg);
+      throw new Error(errMsg);
     }
     return availableTypes;
   }
@@ -369,9 +369,9 @@ class LodelSession {
           return null;
         return "(" + text.replace(/(\n|\s)+/g, " ") + ")";
       })(body);
-      const err = Error(`Can't get id of created entity ${lodelError}`);
-      logger.error(err);
-      throw err;
+      const errMsg = `Can't get id of created entity ${lodelError}`;
+      logger.error(errMsg);
+      throw new Error(errMsg);
     }
     return parseInt(entityId, 10);
   }
@@ -413,9 +413,9 @@ class LodelSession {
       };
       const taskId = getTaskId(body);
       if (taskId == null) {
-        const err = Error(`Could not get taskId for upload of doc ${filepath}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Could not get taskId for upload of doc ${filepath}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return { taskId };
     }
@@ -441,9 +441,9 @@ class LodelSession {
         return statusText.replace(/(\n|\s)+/g, " ");
       })(body);
       if (status == null) {
-        const err = Error(`Could not get OTX log for task ${taskId}: status is null`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Could not get OTX log for task ${taskId}: status is null`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return { taskId, status };
     }
@@ -471,9 +471,9 @@ class LodelSession {
       };
       const docId = getDocId(response.request.uri.href);
       if (docId == null) {
-        const err = Error(`Error while uploading '${filepath}': could not get id after upload`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Error while uploading '${filepath}': could not get id after upload`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return { taskId, status, docId };
     }
@@ -500,9 +500,9 @@ class LodelSession {
       // Get form values
       const form = parseForm(body, "form#edit_ent");
       if (Object.keys(form).length === 0) {
-        const err = Error(`uploadPdf: Could not get values from form of doc ${docId}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `uploadPdf: Could not get values from form of doc ${docId}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
 
       const formData = Object.assign({}, form, {
@@ -536,9 +536,9 @@ class LodelSession {
     const idTypeStr = $("input[name='idtype']").eq(0).attr("value");
     const idType = Number(idTypeStr);
     if (!idType) {
-      const err = Error(`Error: idType not found on index ${id}`);
-      logger.error(err);
-      throw err;
+      const errMsg = `Error: idType not found on index ${id}`;
+      logger.error(errMsg);
+      throw new Error(errMsg);
     }
     const relatedEntities: number[] = [];
     $(".listEntities li").each(function (this: cheerio.Element) {
@@ -548,9 +548,9 @@ class LodelSession {
         const entityId = Number(match);
         relatedEntities.push(entityId);
       } else {
-        const err = Error(`Error: missing related entity id in index ${id}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Error: missing related entity id in index ${id}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
     });
     const data: { [key: string]: string; } = {};
@@ -576,9 +576,9 @@ class LodelSession {
     const submitNewForm = ({ response, body }: RequestResult) => {
       const form = parseForm(body, "form.entry");
       if (Object.keys(form).length === 0) {
-        const err = Error(`editIndex: Could not get values from form of index ${id}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `editIndex: Could not get values from form of index ${id}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
 
       const formData = Object.assign({}, form, data);
@@ -593,11 +593,11 @@ class LodelSession {
 
     const findErrors = ({ response, body }: RequestResult) => {
       const $ = cheerio.load(body);
-      const errMsg = $("form.entry span.error").text();
-      if (errMsg) {
-        const err = Error(`editIndex ${id}: ${errMsg}`);
-        logger.error(err);
-        throw err;
+      const errText = $("form.entry span.error").text();
+      if (errText) {
+        const errMsg = `editIndex ${id}: ${errText}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return Promise.resolve({ response, body });
     };
@@ -645,9 +645,9 @@ class LodelSession {
         }
       });
       if (!id) {
-        const err = Error(`Could not find id from name ${name} (type ${idType})`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Could not find id from name ${name} (type ${idType})`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return id;
     };
@@ -663,9 +663,9 @@ class LodelSession {
       const entry = await this.getEntry(id);
       const type = entry.idType;
       if (!type) {
-        const err = Error(`Could not find type of entry ${id}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Could not find type of entry ${id}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return type;
     };
@@ -692,9 +692,9 @@ class LodelSession {
       const entry = await this.getEntry(id);
       const name = entry.data["data[nom]"];
       if (!name) {
-        const err = Error(`Could not find name of entry ${id}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Could not find name of entry ${id}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
       return name;
     };
@@ -827,9 +827,9 @@ class LodelSession {
     const submitNewForm = ({ response, body }: RequestResult) => {
       const form = parseForm(body, "form#edit_ent");
       if (Object.keys(form).length === 0) {
-        const err = Error(`resubmitEntity: Could not get values from form of doc ${docId}`);
-        logger.error(err);
-        throw err;
+        const errMsg = `resubmitEntity: Could not get values from form of doc ${docId}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
 
       const formData = Object.assign({}, form);
@@ -885,9 +885,9 @@ class LodelSession {
   async restoreBackup(file: string) {
     const checkResult = ({ response, body }: RequestResult) => {
       if (!body.includes("Importation des données réussie")) {
-        const err = Error(`Could not find restoreBackup success message (${file})`);
-        logger.error(err);
-        throw err;
+        const errMsg = `Could not find restoreBackup success message (${file})`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
       }
     };
 
