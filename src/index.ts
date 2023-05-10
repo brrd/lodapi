@@ -124,24 +124,40 @@ const htpasswd = {
 };
 
 // Parse form fields into an object
-// TODO: factoriser
 function getFormData ($:cheerio.CheerioAPI, selector: string) {
   const data: { [key: string]: string } = {};
+  const parentEntities: string[] = [];
   $(selector).each(function(this: cheerio.Node) {
     const $el = $(this);
     const name = $el.attr("name");
     if (name == null || name === "altertitle[__lodel_wildcard]") return;
+
+    // Convert entitytype in a readable text
+    if (name.startsWith("entitytype[")) {
+      if (!$el.prop("checked")) return;
+      // @ts-ignore: it's all right
+      const label = $el[0].nextSibling.nodeValue;
+      if (label && typeof label === "string") {
+        parentEntities.push(label.trim());
+      }
+      return;
+    }
+
     if ($el.attr("type") === "checkbox") {
       data[name] = $el.prop("checked");
       return;
     }
     const val = $el.val();
+
     if (val) {
       data[name] = (typeof val === "string" ? val : val[0]);
       return;
     }
     data[name] = "";
   });
+  if (parentEntities.length > 0) {
+    data.entitytype = parentEntities.sort((a, b) => a.localeCompare(b)).join(", ");
+  }
   return data;
 }
 
