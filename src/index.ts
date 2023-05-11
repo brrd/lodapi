@@ -223,7 +223,7 @@ class LodelSession {
         form: {
           login: login,
           passwd: password,
-          url_retour: new URL(this.baseUrl).pathname
+          url_retour: new URL(this.baseUrl).pathname + "/lodel"
         },
         jar: true
       },
