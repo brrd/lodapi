@@ -97,7 +97,7 @@ interface Field {
 interface Option {
   name: string,
   type: string,
-  title: string,
+  defaultValue: string,
   id: number,
   group?: number,
   data?: { [key: string]: string }
@@ -1126,7 +1126,7 @@ class LodelSession {
 
     const $ = cheerio.load(body);
 
-    const options: Option[] = [];
+    const options: { [key: string]: Option } = {};
     const selector = "table.statistics tr:not(:nth-child(-n+2))";
 
     $(selector).each(function (this: cheerio.Element) {
@@ -1141,13 +1141,13 @@ class LodelSession {
       const option: Option = {
         name: $(this).find("td:nth-child(1)").text(),
         type: $(this).find("td:nth-child(2)").text(),
-        title: $(this).find("td:nth-child(3)").text(),
+        defaultValue: $(this).find("td:nth-child(3)").text(),
         id: Number(id),
       }
       if (groupId) {
         option.group = groupId;
       }
-      options.push(option);
+      options[option.name] = option;
     });
     return options;
   }
@@ -1163,7 +1163,7 @@ class LodelSession {
 
     const $ = cheerio.load(body);
 
-    const styles: InternalStyle[] = [];
+    const styles: { [key: string]: InternalStyle } = {};
     const selector = "table.statistics tr:not(:first-child)";
 
     $(selector).each(function (this: cheerio.Element) {
@@ -1179,7 +1179,7 @@ class LodelSession {
         greedy: $(this).find("td:nth-child(5)").text() === "Oui", // FIXME: ne fonctionne qu'en français
         id: Number(id),
       }
-      styles.push(style);
+      styles[style.style] = style;
     });
     return styles;
   }
