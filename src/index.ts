@@ -962,13 +962,13 @@ class LodelSession {
     return classes;
   }
 
-  async getClassesData(classType: "entities" | "entries" | "persons", deap = false) {
+  async getClassesData(classType: "entities" | "entries" | "persons") {
     await this.lodelAdminRequired();
 
     const classes = await this.listClasses(classType);
     const proms = classes.reduce((res: any[] = [], classname) => {
-      res.push(this.getFields(classname, deap));
-      res.push(this.getTypes(classType, classname, deap));
+      res.push(this.getFields(classname, true));
+      res.push(this.getTypes(classType, classname, true));
       return res;
     }, []);
 
@@ -982,11 +982,11 @@ class LodelSession {
       }
       const isFields = current[0].name !== undefined;
 
-      // Use object with unique id for easier comparison
+      // Use object with unique id for easier comparison + output "data" prop only
       const toObject = (arr: any[] = [], idProp: string) => {
         return arr.reduce((obj: { [key: string]: any }, item) => {
           const key = item[idProp];
-          obj[key] = item;
+          obj[key] = item.data;
           return obj;
         }, {});
       }

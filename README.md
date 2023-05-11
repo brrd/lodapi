@@ -184,9 +184,9 @@ Return a list of available options ids.
 
 List classes defined in editorial model. `getDetail()` can be used to get more information about each individual class.
 
-### `getClassesData(classType: "entities" | "entries" | "persons", deap: boolean)`
+### `getClassesData(classType: "entities" | "entries" | "persons")`
 
-Get data about fields and types of all classes. If `deap` is true, a request is performed for each field to get its full details.
+Get the full data about fields and types of all classes.
 
 ### `getTypes(classType: "entities" | "entries" | "persons", classname: string, deap: boolean)`
 
