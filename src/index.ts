@@ -933,7 +933,7 @@ class LodelSession {
 
   async listOptionsIds() {
     const { response, body } = await this.request({
-      description: "getFields",
+      description: "listOptionsIds",
       exec: `/lodel/admin/index.php`,
       method: "get"
     });
@@ -948,7 +948,7 @@ class LodelSession {
 
   async listClasses(classType: "entities" | "entries" | "persons") {
     const { response, body } = await this.request({
-      description: "getClasses",
+      description: "listClasses",
       exec: `/lodel/admin/index.php?do=list&lo=classes&classtype=${classType}`,
       method: "get"
     });
@@ -1011,7 +1011,7 @@ class LodelSession {
     };
 
     const { response, body } = await this.request({
-      description: "getClassesData",
+      description: "getTypes",
       exec: `/lodel/admin/index.php?do=list&lo=${loMap[classType]}&class=${classname}`,
       method: "get"
     });
