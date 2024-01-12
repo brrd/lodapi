@@ -1087,10 +1087,9 @@ class LodelSession {
       const id = (href.match(/&id=(\d+)/) || [])[1];
       if (id == null) return;
 
-      let groupName
+      let groupName;
       let isFirstTable = true;
       if (hasGroups) {
-        const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
         groupName = $(this).parents("table").find("th.group").eq(0).text()
       } else {
         isFirstTable = $(this).parents("table").is(":first-of-type");
@@ -1165,7 +1164,6 @@ class LodelSession {
       const id = (href.match(/&id=(\d+)/) || [])[1];
       if (id == null) return;
 
-      // TODO : remove duplicate groupId + add groupName as in entities
       let groupId;
       const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
       groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
