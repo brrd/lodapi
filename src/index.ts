@@ -89,7 +89,6 @@ interface Field {
   tei: string,
   class: string,
   id: number,
-  groupId?: number,
   groupName?: string,
   relation?: boolean
   data?: { [key: string]: any }
@@ -1088,12 +1087,10 @@ class LodelSession {
       const id = (href.match(/&id=(\d+)/) || [])[1];
       if (id == null) return;
 
-      let groupId;
       let groupName
       let isFirstTable = true;
       if (hasGroups) {
         const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
-        groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
         groupName = $(this).parents("table").find("th.group").eq(0).text()
       } else {
         isFirstTable = $(this).parents("table").is(":first-of-type");
@@ -1109,9 +1106,6 @@ class LodelSession {
         id: Number(id),
         relation: !isFirstTable
       }
-      if (groupId) {
-        field.groupId = groupId;
-      }
       if (groupName) {
         field.groupName = groupName;
       }
@@ -1121,9 +1115,6 @@ class LodelSession {
     if (deap) {
       const proms = fields.map(async (field) => {
         field.data = await this.getDetails("tablefields", field.id);
-        if (field.groupId) {
-          field.data.groupId = field.groupId;
-        }
         if (field.groupName) {
           field.data.groupName = field.groupName;
         }
@@ -1174,6 +1165,7 @@ class LodelSession {
       const id = (href.match(/&id=(\d+)/) || [])[1];
       if (id == null) return;
 
+      // TODO : remove duplicate groupId + add groupName as in entities
       let groupId;
       const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
       groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
