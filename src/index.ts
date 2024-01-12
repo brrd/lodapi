@@ -984,7 +984,7 @@ class LodelSession {
       if (!res[classname]) {
         res[classname] = {};
       }
-      const category = (current[0].length === 2 && current[0].name !== undefined && current[0].id !== undefined) ? "groups" :
+      const category = Object.keys(current[0]).length === 3 ? "groups" :
         (current[0].name !== undefined ? "fields" : "types");
 
       // Use object with unique id for easier comparison + output "data" prop only
@@ -1001,7 +1001,7 @@ class LodelSession {
       } else if (category === "types") {
         res[classname].types = toObject(current, "type");
       } else {
-        res[classname].groups = toObject(current, "name");
+        res[classname].groups = current;
       }
       return res;
     }, {});
@@ -1149,7 +1149,8 @@ class LodelSession {
       const groupHref = $(this).find(".actions a").eq(0).attr("href") || "";
       return {
         name: $(this).find("th.group").eq(0).text(),
-        id: Number((groupHref.match(/&id=(\d+)/) || [])[1])
+        id: Number((groupHref.match(/&id=(\d+)/) || [])[1]),
+        class: classname
       }
     }).get();
   }
