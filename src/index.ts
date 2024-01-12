@@ -971,7 +971,7 @@ class LodelSession {
       res.push(this.getFields(classname, true));
       res.push(this.getTypes(classType, classname, true));
       if (classType === "entities") {
-        res.push(this.getEntityFieldsGroup(classname));
+        res.push(this.getEntityFieldsGroups(classname));
       }
       return res;
     }, []);
@@ -1133,11 +1133,11 @@ class LodelSession {
     return fields;
   }
 
-  async getEntityFieldsGroup(classname: string) {
+  async getEntityFieldsGroups(classname: string) {
     await this.lodelAdminRequired();
 
     const { response, body } = await this.request({
-      description: "getEntityFieldsGroup",
+      description: "getEntityFieldsGroups",
       exec: `/lodel/admin/index.php?do=list&lo=tablefieldgroups&class=${classname}`,
       method: "get"
     });

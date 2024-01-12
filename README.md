@@ -212,7 +212,7 @@ Get information from the field definition form:
 
 Get type fields. If `deap` is true, a request is performed for each field to get its full details.
 
-### `getEntityFieldsGroup()`
+### `getEntityFieldsGroups()`
 
 **Lodeladmin access level is required.**
 
