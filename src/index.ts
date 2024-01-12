@@ -92,7 +92,7 @@ interface Field {
   groupId?: number,
   groupName?: string,
   relation?: boolean
-  data?: { [key: string]: string }
+  data?: { [key: string]: any }
 }
 
 interface Option {
@@ -970,6 +970,9 @@ class LodelSession {
     const proms = classes.reduce((res: any[] = [], classname) => {
       res.push(this.getFields(classname, true));
       res.push(this.getTypes(classType, classname, true));
+      if (classType === "entities") {
+        res.push(this.getEntityFieldsGroup(classname));
+      }
       return res;
     }, []);
 
@@ -981,7 +984,8 @@ class LodelSession {
       if (!res[classname]) {
         res[classname] = {};
       }
-      const isFields = current[0].name !== undefined;
+      const category = (current[0].length === 2 && current[0].name !== undefined && current[0].id !== undefined) ? "groups" :
+        (current[0].name !== undefined ? "fields" : "types");
 
       // Use object with unique id for easier comparison + output "data" prop only
       const toObject = (arr: any[] = [], idProp: string) => {
@@ -992,10 +996,12 @@ class LodelSession {
         }, {});
       }
 
-      if (isFields) {
+      if (category === "fields") {
         res[classname].fields = toObject(current, "name");
-      } else {
+      } else if (category === "types") {
         res[classname].types = toObject(current, "type");
+      } else {
+        res[classname].groups = toObject(current, "name");
       }
       return res;
     }, {});
@@ -1115,6 +1121,12 @@ class LodelSession {
     if (deap) {
       const proms = fields.map(async (field) => {
         field.data = await this.getDetails("tablefields", field.id);
+        if (field.groupId) {
+          field.data.groupId = field.groupId;
+        }
+        if (field.groupName) {
+          field.data.groupName = field.groupName;
+        }
       });
       await Promise.all(proms);
     }
