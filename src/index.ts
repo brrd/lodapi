@@ -1115,6 +1115,27 @@ class LodelSession {
     return fields;
   }
 
+  async getEntityFieldsGroup(classname: string) {
+    await this.lodelAdminRequired();
+
+    const { response, body } = await this.request({
+      description: "getEntityFieldsGroup",
+      exec: `/lodel/admin/index.php?do=list&lo=tablefieldgroups&class=${classname}`,
+      method: "get"
+    });
+
+    const $ = cheerio.load(body);
+
+    const $tables = $("table.statistics");
+    return $tables.map(function() {
+      const groupHref = $(this).find(".actions a").eq(0).attr("href") || "";
+      return {
+        name: $(this).find("th.group").eq(0).text(),
+        id: Number((groupHref.match(/&id=(\d+)/) || [])[1])
+      }
+    }).get();
+  }
+
   async listOptions() {
     await this.lodelAdminRequired();
 

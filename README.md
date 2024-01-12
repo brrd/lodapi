@@ -186,6 +186,8 @@ List classes defined in editorial model. `getDetail()` can be used to get more i
 
 ### `getClassesData(classType: "entities" | "entries" | "persons")`
 
+**Lodeladmin access level is required.**
+
 Get the full data about fields and types of all classes.
 
 ### `getTypes(classType: "entities" | "entries" | "persons", classname: string, deap: boolean)`
@@ -209,6 +211,12 @@ Get information from the field definition form:
 **Lodeladmin access level is required.**
 
 Get type fields. If `deap` is true, a request is performed for each field to get its full details.
+
+### `getEntityFieldsGroup()`
+
+**Lodeladmin access level is required.**
+
+Get groups of fields of the specified entity.
 
 ### `listOptions()`
 
