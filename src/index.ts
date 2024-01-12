@@ -89,7 +89,8 @@ interface Field {
   tei: string,
   class: string,
   id: number,
-  group?: number,
+  groupId?: number,
+  groupName?: string,
   relation?: boolean
   data?: { [key: string]: string }
 }
@@ -99,7 +100,7 @@ interface Option {
   type: string,
   defaultValue: string,
   id: number,
-  group?: number,
+  groupId?: number,
   data?: { [key: string]: string }
 }
 
@@ -1082,10 +1083,12 @@ class LodelSession {
       if (id == null) return;
 
       let groupId;
+      let groupName
       let isFirstTable = true;
       if (hasGroups) {
         const groupHref = $(this).parents("table").find(".actions a").eq(0).attr("href") || "";
         groupId = Number((groupHref.match(/&id=(\d+)/) || [])[1]);
+        groupName = $(this).parents("table").find("th.group").eq(0).text()
       } else {
         isFirstTable = $(this).parents("table").is(":first-of-type");
       }
@@ -1101,7 +1104,10 @@ class LodelSession {
         relation: !isFirstTable
       }
       if (groupId) {
-        field.group = groupId;
+        field.groupId = groupId;
+      }
+      if (groupName) {
+        field.groupName = groupName;
       }
       fields.push(field);
     });
@@ -1166,7 +1172,7 @@ class LodelSession {
         id: Number(id),
       }
       if (groupId) {
-        option.group = groupId;
+        option.groupId = groupId;
       }
       options[option.name] = option;
     });
