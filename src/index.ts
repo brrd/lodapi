@@ -1045,7 +1045,7 @@ class LodelSession {
     return types;
   }
 
-  async getDetails(lo: "entities" | "entries" | "persons" | "tablefields" | "options", id: number) {
+  async getDetails(lo: "entities" | "entries" | "persons" | "tablefields" | "indextablefields" | "options", id: number) {
     await this.lodelAdminRequired();
 
     const loMap = {
@@ -1053,6 +1053,7 @@ class LodelSession {
       "entries": "entrytypes",
       "persons": "persontypes",
       "tablefields": "tablefields",
+      "indextablefields" : "indextablefields",
       "options": "options"
     };
 
@@ -1113,7 +1114,8 @@ class LodelSession {
 
     if (deap) {
       const proms = fields.map(async (field) => {
-        field.data = await this.getDetails("tablefields", field.id);
+        const lo = (field.type === "entries" || field.type === "persons") ? "indextablefields" : "tablefields";
+        field.data = await this.getDetails(lo, field.id);
         if (field.groupName) {
           field.data.groupName = field.groupName;
         }
